@@ -1,10 +1,10 @@
-import SvgIcon from "CommonElements/Icons/SvgIcon";
 import { sidebarItemType } from "Types/LayoutDataType";
 import CustomizerContext from "helper/Customizer";
 import layoutContext from "helper/Layout";
 import { useRouter } from "next/router";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
+import { Icon } from "@iconify/react";
 
 type menuListType = {
   MENUITEMS: sidebarItemType[];
@@ -55,8 +55,9 @@ const Menulist = ({setActive,handleActive,active,MENUITEMS,level,activeLink,setA
               }
             }}
           >
-            {item.icon && (<SvgIcon className="stroke-icon" iconId={`stroke-${item.icon}`} />)}
-            {item.icon && (<SvgIcon className="fill-icon" iconId={`fill-${item.icon}`} />)}
+            {item.icon && <Icon icon={item.icon} />}
+            {/*{item.icon && (<SvgIcon className="stroke-icon" iconId={`stroke-${item.icon}`} />)}*/}
+            {/*{item.icon && (<SvgIcon className="fill-icon" iconId={`fill-${item.icon}`} />)}*/}
             <span>{t(`${item.title}`)}</span>
             {item.badge ? (<label className={item.badge}>{item.badgetxt}</label>) : ("")}
             {item.children && (

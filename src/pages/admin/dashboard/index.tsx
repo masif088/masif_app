@@ -3,7 +3,7 @@ import PaperNote from "src/components/PaperNote";
 import Breadcrumbs from "CommonElements/Breadcrumbs";
 import React from "react";
 import {Col, Container, Row} from "reactstrap";
-import {Dashboard, Default_Util, ImgPath, Welcometext, Welcometocuba, WhatsNew} from "utils/Constant";
+import {Default_Util, ImgPath, Welcometext, Welcometocuba, WhatsNew} from "utils/Constant";
 import GreetingCard from "@/components/GreetingCard";
 import Widgets1 from "../../../../CommonElements/Widgets1";
 import {Widgets2Data, Widgets2Data2, WidgetsData3} from "@/Data/Dashboard/DefaultData";
@@ -12,13 +12,14 @@ import OrderProfit from "@/components/dashboard/WidgetsWrapper/OrderProfit";
 import GoodsReturn from "@/components/dashboard/WidgetsWrapper/GoodsReturn";
 import Widgets2 from "../../../../CommonElements/Widgets2";
 
-const Default = () => {
+const Dashboard = () => {
     return (<div className="page-body">
         <Breadcrumbs
-            title={Default_Util}
-            mainTitle={Default_Util}
-            parent={Dashboard}
+            title={"Dashboard"}
+            mainTitle={"Dashboard"}
+            parent={"Dashboard"}
         />
+
         <Container fluid={true}>
             <Row className="widget-grid">
                 <GreetingCard
@@ -125,4 +126,4 @@ const Default = () => {
     </div>);
 };
 
-export default Default;
+export default Dashboard;

@@ -22,27 +22,46 @@ import {
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
+import { createClient } from "utils/supabase/client";
 
 const Login = () => {
   const [showPassWord, setShowPassWord] = useState(false);
   const [formValues, setFormValues] = useState({
-    email: "Test@gmail.com",
-    password: "Test@123",
+    email: "mokhamadasif@gmail.com",
+    password: "admin",
   });
   const { email, password } = formValues;
   const router = useRouter();
   const handleUserValue = (event: ChangeEvent<HTMLInputElement>) => {
     setFormValues({ ...formValues, [event.target.name]: event.target.value });
   };
-  const formSubmitHandle = (event: FormEvent) => {
-    event.preventDefault();
-    if (email === "Test@gmail.com" && password === "Test@123") {
-      Cookies.set("token", JSON.stringify(true));
-      router.push("/admin/dashboard");
-      toast.success("login successful");
-    } else {
-      toast.error("wrong");
+  const handleLogin = async () => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      if (data.user) {
+        Cookies.set("token", JSON.stringify(true));
+        router.push("/admin/dashboard");
+        toast.success("Login successful");
+      }
+    } catch (error) {
+      toast.error("An error occurred during login");
+      console.error(error);
     }
+  };
+
+  const formSubmitHandle = async (event: FormEvent) => {
+    event.preventDefault();
+    await handleLogin();
   };
 
   return (

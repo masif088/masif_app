@@ -1,6 +1,32 @@
-import { sidebarMenuType } from "Types/LayoutDataType";
+import {sidebarMenuType} from "Types/LayoutDataType";
 
 export const MenuList: sidebarMenuType[] = [
+  {
+    title: "General",
+    menucontent: "Dashboards,Widgets",
+    Items: [
+      {
+        path: "/admin/dashboard",
+        icon: "material-symbols-light:dashboard-outline",
+        type: "link",
+        title: "Dashboard",
+        id: 10,
+      },
+    ],
+  },
+  {
+    title: "Finance",
+    menucontent: "money",
+    Items: [
+      {
+        path: "/admin/wallet",
+        icon: "material-symbols-light:account-balance-wallet-outline",
+        type: "link",
+        title: "Wallet",
+        id: 10,
+      },
+    ],
+  },
   {
     title: "General",
     menucontent: "Dashboards,Widgets",
