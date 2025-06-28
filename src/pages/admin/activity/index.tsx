@@ -326,7 +326,7 @@ const ActivityKanban = () => {
                             dataSource={kanbanDatasFiltered}
                             cardSettings={{
                                 headerField: "title",
-                                template: cardTemplate.bind(this),
+                                template: cardTemplate,
                                 showHeader: true,
                                 selectionType: "Multiple",
                             }}
