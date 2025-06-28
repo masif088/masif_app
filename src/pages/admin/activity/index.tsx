@@ -326,13 +326,13 @@ const ActivityKanban = () => {
                             dataSource={kanbanDatasFiltered}
                             cardSettings={{
                                 headerField: "title",
-                                template: cardTemplate,
+                                contentField: "description",
                                 showHeader: true,
                                 selectionType: "Multiple",
+                                template: cardTemplate.bind(this),
                             }}
                             swimlaneSettings={{
-                                keyField: "user_id", 
-                                textField: "assignee",
+                                keyField: "user_id",
                                 allowDragAndDrop: true,
                             }}
                             cardDoubleClick={(args: any)=>{
