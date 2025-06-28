@@ -5,7 +5,7 @@ import EmailPassword from "./EmailPassword";
 import AddMessage from "./AddMessage";
 import FormDone from "./FormDone";
 import { Col, Container, Row } from "reactstrap";
-import ShowError from "../../../Forms/Layout/Wizard-1/common/ShowError";
+// import ShowError from "../../../Forms/Layout/Wizard-1/common/ShowError";
 import { toast } from "react-toastify";
 import { Finish, Href, Loading, Next, Previous } from "utils/Constant";
 
@@ -81,7 +81,7 @@ const RegisterWizard = () => {
     } else if (country !== "" && state !== "" && city !== "" && level === 4) {
       setShowFinish(true);
     } else {
-      ShowError();
+      // ShowError();
     }
   };
 

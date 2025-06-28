@@ -234,8 +234,8 @@ export const MonthlyProfitsChartData: MonthlyProfitsChartData = {
         colors: ["var(--chart-text-color)"],
       },
       markers: {
-        width: 6,
-        height: 6,
+        // width: 6,
+        // height: 6,
       },
       itemMargin: {
         horizontal: 7,
@@ -269,11 +269,11 @@ export const MonthlyProfitsChartData: MonthlyProfitsChartData = {
       },
     },
     states: {
-      normal: {
-        filter: {
-          type: "none",
-        },
-      },
+      // normal: {
+      //   filter: {
+      //     type: "none",
+      //   },
+      // },
       hover: {
         filter: {
           type: "none",
@@ -619,11 +619,11 @@ export const OptionsOverViewBarChart: MonthlyProfitsChartData = {
       enabled: false,
     },
     states: {
-      normal: {
-        filter: {
-          type: "none",
-        },
-      },
+      // normal: {
+      //   filter: {
+      //     type: "none",
+      //   },
+      // },
       hover: {
         filter: {
           type: "none",

@@ -270,7 +270,7 @@ export const SmallWidgetsChartOption: ChartOptionType = {
                         size: 4,
                         fillColor: '',
                         strokeColor: 'var(--white)',
-                        radius: 2,
+                        // radius: 2,
                     },
                 }
             ],
@@ -544,8 +544,8 @@ export const FollowerGenderChart: ChartOptionType = {
                 colors: 'var(--chart-text-color)',
             },
             markers: {
-                width: 6,
-                height: 6,
+                // width: 6,       
+                // height: 6,
             },
         },
         responsive: [
@@ -662,7 +662,7 @@ export const ViewChartOption: ChartOptionType = {
                         fillColor: '#7366FF',
                         strokeColor: 'var(--view-border-marker)',
                         strokeWidth: 20,
-                        radius: 2,
+                        // radius: 2,
                         cssClass: 'apexcharts-custom-class',
                     },
                 },

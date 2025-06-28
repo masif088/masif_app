@@ -411,7 +411,7 @@ export const CurrencyChartData: ChartOptionType = {
       hover: {
         filter: {
           type: "darken",
-          value: 1,
+          // value: 1, 
         },
       },
     },

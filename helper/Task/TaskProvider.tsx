@@ -1,13 +1,13 @@
 import React, { ReactNode, useState } from "react";
 import TodoContext from "./index";
-import { taskListInterFace, taskNew } from "@/pages/app/task";
+// import { taskListInterFace, taskNew } from "@/pages/app/task";
 interface CustomizerContextType {
   children: ReactNode;
 }
 const TaskProvider = ({ children }: CustomizerContextType) => {
-  const [allTask, setAllTask] = useState<taskListInterFace[]>([]);
+  const [allTask, setAllTask] = useState<any[]>([]);
 
-  const addNewTask = (data: taskNew) => {
+  const addNewTask = (data: any) => {
     
     const taskTemp = {
       id: allTask.length + 1,

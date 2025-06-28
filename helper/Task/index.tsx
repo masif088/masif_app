@@ -1,9 +1,9 @@
-import { taskListInterFace } from "@/pages/app/task";
+// import { taskListInterFace } from "@/pages/app/task";
 import { Dispatch, SetStateAction, createContext } from "react";
 interface GlobalType  {
-    allTask: taskListInterFace[];
-    setAllTask: Dispatch<SetStateAction< taskListInterFace[]>>;
-    addNewTask:(data:taskListInterFace)=>void
+    allTask: any[];
+    setAllTask: Dispatch<SetStateAction< any[]>>;
+    addNewTask:(data:any)=>void
     removeTask:(data:number)=>void
 };
 

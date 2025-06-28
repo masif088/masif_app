@@ -238,9 +238,9 @@ export const optionsVisitorChartWidget: ApexOptions = {
       colors: "var(--chart-text-color)",
     },
     markers: {
-      width: 6,
-      height: 6,
-      radius: 12,
+      // width: 6,
+      // height: 6,
+      // radius: 12,
     },
     itemMargin: {
       horizontal: 10,

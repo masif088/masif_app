@@ -66,8 +66,8 @@ export const todayProgressData: ChartOptionType = {
                 colors: 'var(--chart-text-color)',
             },
             markers: {
-                width: 6,
-                height: 6,
+                // width: 6,
+                // height: 6,
             },
         },
         responsive: [
@@ -513,11 +513,11 @@ export const UpcomingOptionsChartData: ChartOptionType = {
             width: 2,
         },
         states: {
-            normal: {
-                filter: {
-                    type: 'none',
-                },
-            },
+            // normal: {
+            //     filter: {
+            //         type: 'none',
+            //     },
+            // },
             hover: {
                 filter: {
                     type: 'none',
@@ -608,11 +608,11 @@ export const LessonChartOption: ChartOptionType = {
             },
         },
         states: {
-            normal: {
-                filter: {
-                    type: 'none',
-                },
-            },
+            // normal: {
+            //     filter: {
+            //         type: 'none',
+            //     },
+            // },
             hover: {
                 filter: {
                     type: 'none',

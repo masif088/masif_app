@@ -429,9 +429,9 @@ export const currentAcademicChart: ApexOptions = {
     },
     markers: {
       fillColors: ["#FFAA05", "#7366FF", "#54BA4A", "#FF3364"],
-      radius: 10,
-      width: 8,
-      height: 8,
+      // radius: 10,
+      // width: 8,
+      // height: 8,
     },
     itemMargin: {
       horizontal: 5,
