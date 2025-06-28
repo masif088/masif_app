@@ -540,47 +540,7 @@ const Wallet = () => {
       <Container fluid={true}>
         <Row className="">
           <Col xl={12} sm={12}>
-            <KanbanComponent
-              id="kanban"
-              style={{ padding: "10px 0" }}
-              keyField="status"
-              dataSource={kanbanDatas}
-              cardSettings={{
-                contentField: "summary",
-                headerField: "id",
-                template: cardTemplate.bind(this),
-                showHeader: true,
-                selectionType: "Multiple"
-              }}
-              dialogSettings={{ 
-                template: "#dialogTemplate",
-                fields: [
-                  { text: "Id", key: "id", type: "TextBox" },
-                  { text: "Status", key: "status", type: "DropDown" },
-                  { text: "Summary", key: "summary", type: "TextArea" },
-                  { text: "Type", key: "type", type: "TextBox" },
-                  { text: "Priority", key: "priority", type: "DropDown" },
-                  { text: "Tags", key: "tags", type: "TextBox" },
-                  { text: "Estimate", key: "estimate", type: "Numeric" },
-                  { text: "Assignee", key: "assignee", type: "DropDown" }
-                ]
-              }}
-              dialogOpen={onDialogOpen}
-              swimlaneSettings={{ keyField: "assignee" }}
-              actionComplete={actionComplete}
-              allowDragAndDrop={true}
-              allowKeyboard={true}
-              enableTooltip={true}
-              columnsTemplate="#test"
-            >
-              <ColumnsDirective>
-                <ColumnDirective headerText="To Do" keyField="Open" />
-                <ColumnDirective headerText="In Progress"keyField="InProgress"/>
-                <ColumnDirective headerText="Testing" keyField="Testing" />
-                <ColumnDirective headerText="Done" keyField="Close" />
-                <ColumnDirective headerText="Others" keyField="Others" />
-              </ColumnsDirective>
-            </KanbanComponent>
+
           </Col>
         </Row>
       </Container>
