@@ -24,6 +24,7 @@
     "@reduxjs/toolkit": "^1.9.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
+    "@syncfusion/ej2-gantt": "^21.2.10",
     "@syncfusion/ej2-react-kanban": "^21.2.3",
     "@types/node": "^20.10.3",
     "@types/react": "^18.2.42",
