@@ -40,6 +40,24 @@ import {
   ColumnDirective,
 } from "@syncfusion/ej2-react-kanban";
 
+interface activity {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  assignee: string;
+  created_at: string;
+  updated_at: string;
+  due_date: string;
+  priority: string;
+  type: string;
+  tags: string;
+  note: string;
+  link: string;
+  activity_start: string;
+  activity_end: string;
+}
+
 const Wallet = () => {
   useEffect(() => {
     fetchKanbanDatas();

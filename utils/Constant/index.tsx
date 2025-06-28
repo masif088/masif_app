@@ -7,6 +7,7 @@ export const SvgPath: string = "/assets/svg";
 //Menu
 
 export const MenuWallet: string = "Wallet";
+export const MenuActivity: string = "Activity";
 
 
 // Header
