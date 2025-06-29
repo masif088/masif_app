@@ -159,7 +159,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
     const ModalData = {
         isOpen: modal,
         header: true,
-        class: 'modal-xl',
+        // class: 'modal-xl',
         toggler: toggle,
         title: 'Create New Activity',
         size: 'xl'

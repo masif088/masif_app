@@ -333,6 +333,7 @@ const ActivityKanban = () => {
                             }}
                             swimlaneSettings={{
                                 keyField: "user_id",
+                                textField: "assignee",
                                 allowDragAndDrop: true,
                             }}
                             cardDoubleClick={(args: any)=>{
