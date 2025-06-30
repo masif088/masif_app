@@ -5,6 +5,20 @@ const nextConfig = {
     //  comment when you run in local below down
     API_URL: "https://cuba-next-five.vercel.app/api",
   },
+  images: {
+    domains: [
+      'kxwnkkuokxsfaivtiibm.supabase.co',
+      'supabase.co'
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
   redirects: async () => {
     return [
       {

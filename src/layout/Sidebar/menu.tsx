@@ -48,5 +48,18 @@ export const MenuList: sidebarMenuType[] = [
       // },
     ],
   },
+  {
+    title: "Users",
+    menucontent: "users",
+    Items: [
+      {
+        path: "/admin/users",
+        icon: "material-symbols-light:account-circle",
+        type: "link",
+        title: "Users",
+        id: 99,
+      },
+    ],
+  },
 
 ];

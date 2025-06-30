@@ -43,14 +43,24 @@ const Login = () => {
         password: password,
       });
 
+      if(data.user){
+      const {data:userData} = await supabase.from('users').select('*').eq('id', data.user.id).single();
+      console.log(userData);
+      Cookies.set("user", JSON.stringify(userData));
+      Cookies.set("token", JSON.stringify(true));
+      router.push("/admin/dashboard");
+      }
+
       if (error) {
         toast.error(error.message);
         return;
       }
+      console.log(data.user.id);
 
       if (data.user) {
-        Cookies.set("token", JSON.stringify(true));
-        router.push("/admin/dashboard");
+        // Cookies.set("user", JSON.stringify(data.user));
+        // Cookies.set("token", JSON.stringify(true));
+        // router.push("/admin/dashboard");
         toast.success("Login successful");
       }
     } catch (error) {
