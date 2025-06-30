@@ -2,7 +2,7 @@ import { CardHeader, Col, CardBody, Row, FormGroup, Label, Input, CardFooter, Bu
 import { AboutMe, Address, City, Company, Country, EditProfile, EmailAddress, FirstName, LastName, PostalCode, Select, UpdateProfile, Username } from "utils/Constant"
 import { useState, useEffect } from 'react';
 import { ProfileData } from 'utils/supabase/profileService';
-import { useProfile } from './ProfileProvider';
+import { useProfile } from '../../../../components/profile/ProfileProvider';
 import SkillsInput from './SkillsInput';
 
 const EditProfileForm = () => {

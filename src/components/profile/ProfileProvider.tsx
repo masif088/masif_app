@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { ProfileService, ProfileData, ProjectData } from 'utils/supabase/profileService';
 import { toast } from 'react-toastify';
 
+
 interface ProfileContextType {
   profile: ProfileData | null;
   projects: ProjectData[];

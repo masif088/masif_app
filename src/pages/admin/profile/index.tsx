@@ -1,7 +1,7 @@
 import AddProjectsAndUpload from "./EditProfile/AddProjectsAndUpload";
 import EditMyProfile from "./EditProfile/EditMyProfile";
 import EditProfileForm from "./EditProfile/EditProfileForm";
-import { ProfileProvider } from "./EditProfile/ProfileProvider";
+import { ProfileProvider } from "../../../components/profile/ProfileProvider";
 import Breadcrumbs from "CommonElements/Breadcrumbs";
 import { Container, Row } from "reactstrap";
 import { Users, UserEdit } from "utils/Constant";

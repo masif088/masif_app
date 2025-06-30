@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardBody, CardHeader, Row, Col, Badge, Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-import { Wallet } from '../../../../../../Types/WalletType';
+import { Wallet } from '../../../../Types/WalletType';
 import { MoreVertical, Edit, Trash2, Eye } from 'react-feather';
 
 interface WalletCardProps {

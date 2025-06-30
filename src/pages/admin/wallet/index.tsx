@@ -26,7 +26,7 @@ import {
   TransactionTable, 
   WalletModal, 
   TransactionModal 
-} from './components';
+} from '../../../components/wallet';
 
 // Services and Types
 import { WalletService } from '../../../../utils/supabase/walletService';

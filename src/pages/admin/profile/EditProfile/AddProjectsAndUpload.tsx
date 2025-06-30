@@ -4,7 +4,7 @@ import AddProjectsAndUploadTableBody from "./AddProjectsAndUploadTableBody";
 import CommonCardHeading from 'CommonElements/CommonCardHeading';
 import { useState } from 'react';
 import { ProjectData } from 'utils/supabase/profileService';
-import { useProfile } from './ProfileProvider';
+import { useProfile } from '../../../../components/profile/ProfileProvider';
 
 const AddProjectsAndUpload = () => {
   const { projects, loading, createProject, updateProject, deleteProject } = useProfile();

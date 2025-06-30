@@ -13,8 +13,8 @@ import {
   Col,
   Alert
 } from 'reactstrap';
-import { Wallet, CreateWalletData } from '../../../../../../Types/WalletType';
-import { WalletService } from '../../../../../../utils/supabase/walletService';
+import { Wallet, CreateWalletData } from '../../../../Types/WalletType';
+import { WalletService } from '../../../../utils/supabase/walletService';
 
 interface WalletModalProps {
   isOpen: boolean;

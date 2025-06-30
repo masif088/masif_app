@@ -4,7 +4,7 @@ import { Card, Col, CardBody, Row, Label, Input, FormGroup, Button, } from "reac
 import { AboutMe, Designer, EmailAddress, ImgPath, MarkJecno, MyProfile, Password, Save, Website, } from "utils/Constant";
 import { useState, useRef } from "react";
 import { ProfileData } from "utils/supabase/profileService";
-import { useProfile } from "./ProfileProvider";
+import { useProfile } from "../../../../components/profile/ProfileProvider";
 
 const EditMyProfile = () => {
   const { profile, loading, updateProfile, uploadImage } = useProfile();

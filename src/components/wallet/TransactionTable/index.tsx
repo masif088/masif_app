@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Badge, Button, Input, Row, Col, FormGroup, Label, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Card, CardBody } from 'reactstrap';
-import { Transaction, Wallet } from '../../../../../../Types/WalletType';
+import { Transaction, Wallet } from '../../../../Types/WalletType';
 import { Filter, Download, Eye, Calendar, TrendingUp, TrendingDown, DollarSign } from 'react-feather';
 import { WalletService } from 'utils/supabase/walletService';
 
