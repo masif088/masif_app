@@ -27,9 +27,13 @@ import { createClient } from "utils/supabase/client";
 const Login = () => {
   const [showPassWord, setShowPassWord] = useState(false);
   const [formValues, setFormValues] = useState({
-    email: "mokhamadasif@gmail.com",
-    password: "admin",
+    email: "",
+    password: "",
   });
+  // const [formValues, setFormValues] = useState({
+  //   email: "mokhamadasif@gmail.com",
+  //   password: "admin",
+  // });
   const { email, password } = formValues;
   const router = useRouter();
   const handleUserValue = (event: ChangeEvent<HTMLInputElement>) => {
