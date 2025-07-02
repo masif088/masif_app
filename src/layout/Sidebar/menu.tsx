@@ -59,6 +59,13 @@ export const MenuList: sidebarMenuType[] = [
         title: "Users",
         id: 99,
       },
+      {
+        path: "/admin/contact-email",
+        icon: "material-symbols-light:account-circle",
+        type: "link",
+        title: "Contact Email",
+        id: 99,
+      },
     ],
   },
 

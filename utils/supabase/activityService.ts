@@ -1,6 +1,7 @@
 import { createClient } from './client';
-import { Activity, User, ActivityPriority, CreateActivityFormData, ActivityFilters, ActivityStatus, ActivityType } from '../../Types/ActivityType';
+import { Activity, User, ActivityPriority, CreateActivityFormData, ActivityFilters, ActivityStatus, ActivityType, ActivityNote, EmailData, ContactEmail, CreateContactEmailData } from '../../Types/ActivityType';
 import { log } from 'console';
+import Cookies from 'js-cookie';
 
 export class ActivityService {
     private static supabase = createClient();
@@ -256,5 +257,238 @@ export class ActivityService {
     }
 
     // Initialize column indices for activities that don't have them
+
+    // Activity Notes Methods
+    static async getActivityNotes(activityId: number): Promise<ActivityNote[]> {
+        try {
+            const { data, error } = await this.supabase
+                .from('activity_notes')
+                .select('*, users(*)')
+                .eq('activity_id', activityId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching activity notes:', error);
+            throw error;
+        }
+    }
+
+    static async createActivityNote(noteData: Omit<ActivityNote, 'id' | 'created_at' | 'updated_at'>): Promise<ActivityNote | null> {
+        try {
+            const dataToInsert = {
+                ...noteData,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_notes')
+                .insert([dataToInsert])
+                .select('*, users(*)')
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating activity note:', error);
+            throw error;
+        }
+    }
+
+    static async updateActivityNote(id: number, updates: Partial<ActivityNote>): Promise<ActivityNote | null> {
+        try {
+            const updateData = {
+                ...updates,
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_notes')
+                .update(updateData)
+                .eq('id', id)
+                .select('*, users(*)')
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error updating activity note:', error);
+            throw error;
+        }
+    }
+
+    static async deleteActivityNote(id: number): Promise<void> {
+        try {
+            const { error } = await this.supabase
+                .from('activity_notes')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error deleting activity note:', error);
+            throw error;
+        }
+    }
+
+    // Email Methods
+    static async sendActivityEmail(emailData: EmailData): Promise<boolean> {
+        try {
+            // Send email via API route
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    to: emailData.to,
+                    cc: emailData.cc,
+                    bcc: emailData.bcc,
+                    subject: emailData.subject,
+                    body: emailData.body,
+                    activity_id: emailData.activity_id,
+                    user_id: emailData.user_id
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to send email');
+            }
+            
+            const user_id = JSON.parse(Cookies.get('user') || '{}').id;
+            // Store email record in database
+            const { error } = await this.supabase
+                .from('activity_emails')
+                .insert([{
+                    activity_id: emailData.activity_id,
+                    user_id: user_id,
+                    to_emails: emailData.to,
+                    cc_emails: emailData.cc || [],
+                    bcc_emails: emailData.bcc || [],
+                    subject: emailData.subject,
+                    body: emailData.body,
+                    status: 'sent'
+                }]);
+
+            if (error) throw error;
+            
+            return true;
+        } catch (error) {
+            console.error('Error sending email:'+Cookies.get('user_id'), error);
+            throw error;
+        }
+    }
+
+    static async getActivityEmails(activityId: number): Promise<any[]> {
+        try {
+            const { data, error } = await this.supabase
+                .from('activity_emails')
+                .select('*')
+                .eq('activity_id', activityId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching activity emails:', error);
+            throw error;
+        }
+    }
+
+    // Contact Email Methods
+    static async getContactEmails(): Promise<ContactEmail[]> {
+        try {
+            const user_id = JSON.parse(Cookies.get('user') || '{}').id;
+            const { data, error } = await this.supabase
+                .from('contact_emails')
+                .select('*')
+                .eq('user_id', user_id)
+                .order('is_favorite', { ascending: false })
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching contact emails:', error);
+            throw error;
+        }
+    }
+
+    static async createContactEmail(contactData: CreateContactEmailData): Promise<ContactEmail | null> {
+        try {
+            const user_id = JSON.parse(Cookies.get('user') || '{}').id;
+            const dataToInsert = {
+                ...contactData,
+                user_id,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('contact_emails')
+                .insert([dataToInsert])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating contact email:', error);
+            throw error;
+        }
+    }
+
+    static async updateContactEmail(id: number, updates: Partial<ContactEmail>): Promise<ContactEmail | null> {
+        try {
+            const updateData = {
+                ...updates,
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('contact_emails')
+                .update(updateData)
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error updating contact email:', error);
+            throw error;
+        }
+    }
+
+    static async deleteContactEmail(id: number): Promise<void> {
+        try {
+            const { error } = await this.supabase
+                .from('contact_emails')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error deleting contact email:', error);
+            throw error;
+        }
+    }
+
+    static async toggleFavorite(id: number, isFavorite: boolean): Promise<void> {
+        try {
+            const { error } = await this.supabase
+                .from('contact_emails')
+                .update({ is_favorite: isFavorite })
+                .eq('id', id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            throw error;
+        }
+    }
 
 } 

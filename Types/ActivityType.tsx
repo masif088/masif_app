@@ -36,6 +36,48 @@ export interface ActivityStatus {
     description?: string;
     level?: number;
     is_active?: boolean;
+    color?: string;
+}
+
+export interface ActivityNote {
+    id?: number;
+    activity_id: number;
+    user_id: string;
+    content: string;
+    is_internal: boolean;
+    created_at?: string;
+    updated_at?: string;
+    users?: User;
+}
+
+export interface EmailData {
+    to: string[];
+    cc?: string[];
+    bcc?: string[];
+    subject: string;
+    body: string;
+    activity_id: number;
+    user_id?: string;
+}
+
+export interface ContactEmail {
+    id?: number;
+    user_id: string;
+    name: string;
+    email: string;
+    category: string;
+    notes?: string;
+    is_favorite: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateContactEmailData {
+    name: string;
+    email: string;
+    category: string;
+    notes?: string;
+    is_favorite?: boolean;
 }
 
 export interface ActivityType {

@@ -13,8 +13,11 @@ import { log } from "console";
 import CreateActivity from "./create";
 import { Activity, ActivityStatus } from "Types/ActivityType";
 import EditActivity from "./edit";
+import { useRouter } from "next/router";
 
 const ActivityKanban = () => {
+    const router = useRouter();
+    
     useEffect(() => {
         fetchKanbanDatas();
         fetchAssigneeData();
@@ -247,6 +250,10 @@ const ActivityKanban = () => {
         setEditModalOpen(true);
     };
 
+    const handleViewDetails = (activityId: number) => {
+        router.push(`/admin/activity/detail/${activityId}`);
+    };
+
 
 
     const cardTemplate = (props: any) => {
@@ -287,13 +294,22 @@ const ActivityKanban = () => {
 
                         <div className="card-text">Start: {formatDate(props.activity_start)}</div>
                         <div className="card-text">End: {formatDate(props.activity_end)}</div>
-                        {props.link && (
-                            <div className="btn btn-primary mt-2">
-                                <a href={props.link} target="_blank" className="text-white">
+                        <div className="d-flex gap-2 mt-3">
+                            <button 
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewDetails(props.id);
+                                }}
+                            >
+                                <i className="icon-eye"></i> View Details
+                            </button>
+                            {props.link && (
+                                <a href={props.link} target="_blank" className="btn btn-sm btn-primary">
                                     <i className="icon-link"></i>
                                 </a>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
