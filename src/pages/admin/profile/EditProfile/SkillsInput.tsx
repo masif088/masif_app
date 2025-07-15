@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Input, FormGroup, Label } from 'reactstrap';
 
 interface SkillsInputProps {
@@ -37,7 +37,9 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
   ];
 
   // Parse current skills from value string
-  const currentSkills = value ? value.split(',').map(skill => skill.trim()).filter(Boolean) : [];
+  const currentSkills = useMemo(() => {
+    return value ? value.split(',').map(skill => skill.trim()).filter(Boolean) : [];
+  }, [value]);
 
   // Filter suggestions based on input
   useEffect(() => {

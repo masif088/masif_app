@@ -4,9 +4,9 @@ export interface Activity {
     description: string;
     status: string;
     user_id: string;
+    company_id?: number;
     created_at?: string;
     updated_at?: string;
-    due_date: string;
     priority: string;
     type: string;
     tags: string;
@@ -26,24 +26,49 @@ export interface User {
 }
 
 export interface ActivityPriority {
-    title: string;
-    color: string;
+    title: string; // Primary key
+    sub_title: string;
     description?: string;
+    color: string; // Bootstrap color name (primary, secondary, success, info, warning, danger)
+    level: number;
+    created_at?: string;
+    updated_at?: string;
 }
-export interface ActivityStatus {
+
+export interface CreateActivityPriorityData {
     title: string;
     sub_title: string;
     description?: string;
-    level?: number;
-    is_active?: boolean;
-    color?: string;
+    color: string; // Bootstrap color name (primary, secondary, success, info, warning, danger)
+    level: number;
+}
+export interface ActivityStatus {
+    title: string; // Primary key
+    sub_title: string;
+    description?: string;
+    level: number;
+    is_active: boolean;
+    color: string; // Bootstrap color name (primary, secondary, success, info, warning, danger)
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateActivityStatusData {
+    title: string;
+    sub_title: string;
+    description?: string;
+    level: number;
+    is_active: boolean;
+    color: string; // Bootstrap color name (primary, secondary, success, info, warning, danger)
 }
 
 export interface ActivityNote {
     id?: number;
     activity_id: number;
-    user_id: string;
+    user_id: string | null;
     content: string;
+    email: string | null;
+    email_uid: string | null;
     is_internal: boolean;
     created_at?: string;
     updated_at?: string;
@@ -91,7 +116,7 @@ export interface CreateActivityFormData {
     description: string;
     status: string;
     user_id: string;
-    due_date: string;
+    company_id?: number;
     priority: string;
     type: string;
     tags: string;

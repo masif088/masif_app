@@ -10,9 +10,10 @@ const CustomEditorComponent = dynamic(() => import('./EditorComponent'), {
 interface propsTypes {
     setEdit: (num: string) => void;
     getEdit: string;
+    clearEditor?: () => void;
 }
 
-const CustomEditor = ({ setEdit, getEdit }: propsTypes) => {
+const CustomEditor = ({ setEdit, getEdit, clearEditor }: propsTypes) => {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {

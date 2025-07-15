@@ -83,10 +83,10 @@ const ActivityKanban = () => {
                 activity_end: item.activity_end,
                 link: item.link,
                 user_id: item.user_id,
+                company_id: item.company_id,
                 assignee: item.users ? `${item.users.first_name} ${item.users.last_name}` : 'Unassigned',
                 activity_priorities: item.activity_priorities || { title: item.status, color: 'primary' },
                 users: item.users,
-                due_date: item.due_date,
                 note: item.note,
                 level: item.activity_priorities.level || 0,
                 column_index: item.column_index || 0
@@ -110,10 +110,10 @@ const ActivityKanban = () => {
                     activity_end: new Date().toISOString(),
                     link: '',
                     user_id: user.id,
+                    company_id: null,
                     assignee: `${user.first_name} ${user.last_name}`,
                     activity_priorities: { title: "Open", color: "primary" },
                     users: user,
-                    due_date: '',
                     note: '',
                     isPlaceholder: true
                 }));

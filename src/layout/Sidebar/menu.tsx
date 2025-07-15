@@ -12,13 +12,6 @@ export const MenuList: sidebarMenuType[] = [
         title: "Dashboard",
         id: 1,
       },
-      {
-        path: "/admin/activity",
-        icon: "material-symbols-light:dashboard-outline",
-        type: "link",
-        title: "Activity",
-        id: 2,
-      },
     ],
   },
   {
@@ -65,6 +58,60 @@ export const MenuList: sidebarMenuType[] = [
         type: "link",
         title: "Contact Email",
         id: 99,
+      },
+    ],
+  },
+  {
+    title: "Company",
+    menucontent: "company",
+    Items: [
+      {
+        path: "/admin/customer",
+        icon: "material-symbols-light:business-center",
+        type: "link",
+        title: "Companies",
+        id: 201,
+      },
+    ],
+  },
+  {
+    title: "Activity",
+    menucontent: "activity",
+    Items: [
+      {
+        path: "/admin/activity",
+        icon: "material-symbols-light:history",
+        type: "link",
+        title: "Activity",
+        id: 202,
+      },
+      {
+        path: "/admin/activity_statuses",
+        icon: "material-symbols-light:history",
+        type: "link",
+        title: "Activity Status",
+        id: 204,
+      },    
+      {
+        path: "/admin/activity_priorities",
+        icon: "material-symbols-light:flag",
+        type: "link",
+        title: "Activity Priorities",
+        id: 203,
+      },
+    ],
+  },
+  
+  {
+    title: "Settings",
+    menucontent: "settings",
+    Items: [
+      {
+        path: "/admin/setting",
+        icon: "material-symbols-light:settings",
+        type: "link",
+        title: "Settings",
+        id: 205,
       },
     ],
   },

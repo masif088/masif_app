@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardBody, CardHeader, Row, Col, Badge, Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import { Wallet } from '../../../../Types/WalletType';
-import { MoreVertical, Edit, Trash2, Eye } from 'react-feather';
+import { MoreVertical, Edit, Trash2, Eye, Plus } from 'react-feather';
 
 interface WalletCardProps {
   wallet: Wallet;
@@ -48,83 +48,101 @@ const WalletCard: React.FC<WalletCardProps> = ({
 
   return (
     <Card className="wallet-card h-100">
-      <CardHeader className="d-flex justify-content-between align-items-center">
-        <div>
-          <h5 className="mb-0">{wallet.name}</h5>
-          <small className="text-muted">
-            Owner: {wallet.owner?.first_name} {wallet.owner?.last_name}
-          </small>
-        </div>
-        <div className="d-flex align-items-center">
-          <Badge 
-            color={wallet.is_active ? 'success' : 'secondary'} 
-            className="me-2"
-          >
-            {wallet.is_active ? 'Active' : 'Inactive'}
-          </Badge>
-          <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
-            <DropdownToggle color="transparent" className="p-0 border-0">
-              <MoreVertical size={16} />
-            </DropdownToggle>
-            <DropdownMenu end>
-              <DropdownItem onClick={() => onView(wallet)}>
-                <Eye size={14} className="me-2" />
-                View Details
-              </DropdownItem>
-              <DropdownItem onClick={() => onAddTransaction(wallet)}>
-                <Edit size={14} className="me-2" />
-                Add Transaction
-              </DropdownItem>
-              <DropdownItem onClick={() => onEdit(wallet)}>
-                <Edit size={14} className="me-2" />
-                Edit Wallet
-              </DropdownItem>
-              <DropdownItem divider />
-              <DropdownItem 
-                onClick={() => onDelete(wallet.id)}
-                className="text-danger"
-              >
-                <Trash2 size={14} className="me-2" />
-                Delete Wallet
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+      <CardHeader>
+        <div className="d-flex justify-content-between align-items-start">
+          <div className="flex-grow-1">
+            <h5 className="mb-1 text-truncate">{wallet.name}</h5>
+            <small className="text-muted d-block">
+              Owner: {wallet.owner?.first_name} {wallet.owner?.last_name}
+            </small>
+          </div>
+          <div className="d-flex align-items-center gap-2 flex-shrink-0">
+            <Badge 
+              color={wallet.is_active ? 'success' : 'secondary'} 
+              className="d-none d-sm-inline"
+            >
+              {wallet.is_active ? 'Active' : 'Inactive'}
+            </Badge>
+            <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
+              <DropdownToggle color="transparent" className="p-0 border-0 text-white">
+                <MoreVertical size={16} />
+              </DropdownToggle>
+              <DropdownMenu end>
+                <DropdownItem onClick={() => onView(wallet)}>
+                  <Eye size={14} className="me-2" />
+                  View Details
+                </DropdownItem>
+                <DropdownItem onClick={() => onAddTransaction(wallet)}>
+                  <Plus size={14} className="me-2" />
+                  Add Transaction
+                </DropdownItem>
+                <DropdownItem onClick={() => onEdit(wallet)}>
+                  <Edit size={14} className="me-2" />
+                  Edit Wallet
+                </DropdownItem>
+                <DropdownItem divider />
+                <DropdownItem 
+                  onClick={() => onDelete(wallet.id)}
+                  className="text-danger"
+                >
+                  <Trash2 size={14} className="me-2" />
+                  Delete Wallet
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </div>
       </CardHeader>
       <CardBody>
-        <Row>
+        <Row className="g-0">
           <Col xs={12}>
             <div className="text-center mb-3">
-              <h3 className={`text-${getBalanceColor(wallet.balance)} mb-1`}>
+              <div className={`display-6 fw-bold text-${getBalanceColor(wallet.balance)} mb-1`}>
                 {formatCurrency(wallet.balance, wallet.currency)}
-              </h3>
+              </div>
               <small className="text-muted">{wallet.currency}</small>
             </div>
           </Col>
         </Row>
         
+        {/* Mobile Status Badge */}
+        <Row className="g-0 d-sm-none">
+          <Col xs={12} className="text-center mb-3">
+            <Badge 
+              color={wallet.is_active ? 'success' : 'secondary'}
+              className="px-3 py-1"
+            >
+              {wallet.is_active ? 'Active' : 'Inactive'}
+            </Badge>
+          </Col>
+        </Row>
+        
         {wallet.description && (
-          <Row>
+          <Row className="g-0">
             <Col xs={12}>
-              <p className="text-muted small mb-0">
-                {wallet.description}
-              </p>
+              <div className="bg-light p-2 rounded mb-3">
+                <small className="text-muted">
+                  {wallet.description}
+                </small>
+              </div>
             </Col>
           </Row>
         )}
         
-        <Row className="mt-3">
-          <Col xs={6}>
-            <small className="text-muted d-block">Created</small>
-            <small className="text-dark">
-              {new Date(wallet.created_at).toLocaleDateString()}
-            </small>
+        <Row className="g-0 small">
+          <Col xs={6} className="pe-2">
+            <div className="border-end">
+              <div className="text-muted">Created</div>
+              <div className="fw-medium">
+                {new Date(wallet.created_at).toLocaleDateString()}
+              </div>
+            </div>
           </Col>
-          <Col xs={6}>
-            <small className="text-muted d-block">Updated</small>
-            <small className="text-dark">
+          <Col xs={6} className="ps-2">
+            <div className="text-muted">Updated</div>
+            <div className="fw-medium">
               {new Date(wallet.updated_at).toLocaleDateString()}
-            </small>
+            </div>
           </Col>
         </Row>
       </CardBody>

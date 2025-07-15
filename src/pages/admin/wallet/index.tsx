@@ -171,10 +171,14 @@ const WalletPage = () => {
       <div className="page-body">
         <Breadcrumbs title={MenuWallet} mainTitle={MenuWallet} parent={MenuWallet} />
         <Container fluid={true}>
-          <div className="text-center py-5">
-            <Spinner color="primary" />
-            <p className="mt-3">Loading wallet data...</p>
-          </div>
+          <Row>
+            <Col xs={12}>
+              <div className="text-center py-5">
+                <Spinner color="primary" />
+                <p className="mt-3">Loading wallet data...</p>
+              </div>
+            </Col>
+          </Row>
         </Container>
       </div>
     );
@@ -185,182 +189,201 @@ const WalletPage = () => {
       <Breadcrumbs title={MenuWallet} mainTitle={MenuWallet} parent={MenuWallet} />
       
       <Container fluid={true}>
-        {error && (
-          <Alert color="danger" className="mb-3">
-            {error}
-          </Alert>
-        )}
+        <Row>
+          <Col xs={12}>
+            {error && (
+              <Alert color="danger" className="mb-3">
+                {error}
+              </Alert>
+            )}
 
-        {/* Statistics Cards */}
-        {stats && (
-          <Row className="mb-4">
-            <Col xl={3} md={6}>
-              <Card className="stat-card">
-                <CardBody>
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon bg-primary">
-                      <CreditCard size={24} />
-                    </div>
-                    <div className="ms-3">
-                      <h4 className="mb-1">{stats.total_wallets}</h4>
-                      <p className="text-muted mb-0">Total Wallets</p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col xl={3} md={6}>
-              <Card className="stat-card">
-                <CardBody>
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon bg-success">
-                      <DollarSign size={24} />
-                    </div>
-                    <div className="ms-3">
-                      <h4 className="mb-1">{formatCurrency(stats.total_balance, 'USD')}</h4>
-                      <p className="text-muted mb-0">Total Balance</p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col xl={3} md={6}>
-              <Card className="stat-card">
-                <CardBody>
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon bg-info">
-                      <TrendingUp size={24} />
-                    </div>
-                    <div className="ms-3">
-                      <h4 className="mb-1">{stats.total_transactions}</h4>
-                      <p className="text-muted mb-0">Total Transactions</p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col xl={3} md={6}>
-              <Card className="stat-card">
-                <CardBody>
-                  <div className="d-flex align-items-center">
-                    <div className="stat-icon bg-warning">
-                      <Users size={24} />
-                    </div>
-                    <div className="ms-3">
-                      <h4 className="mb-1">{wallets.length > 0 ? new Set(wallets.map(w => w.owner_id)).size : 0}</h4>
-                      <p className="text-muted mb-0">Active Users</p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        )}
+            {/* Statistics Cards */}
+            {stats && (
+              <Row className="mb-4">
+                <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-3">
+                  <Card className="stat-card h-100">
+                    <CardBody>
+                      <div className="d-flex align-items-center">
+                        <div className="stat-icon bg-primary flex-shrink-0">
+                          <CreditCard size={24} />
+                        </div>
+                        <div className="ms-3 flex-grow-1">
+                          <h4 className="mb-1">{stats.total_wallets}</h4>
+                          <p className="text-muted mb-0">Total Wallets</p>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Col>
+                <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-3">
+                  <Card className="stat-card h-100">
+                    <CardBody>
+                      <div className="d-flex align-items-center">
+                        <div className="stat-icon bg-success flex-shrink-0">
+                          <DollarSign size={24} />
+                        </div>
+                        <div className="ms-3 flex-grow-1">
+                          <h4 className="mb-1">{formatCurrency(stats.total_balance, 'USD')}</h4>
+                          <p className="text-muted mb-0">Total Balance</p>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Col>
+                <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-3">
+                  <Card className="stat-card h-100">
+                    <CardBody>
+                      <div className="d-flex align-items-center">
+                        <div className="stat-icon bg-info flex-shrink-0">
+                          <TrendingUp size={24} />
+                        </div>
+                        <div className="ms-3 flex-grow-1">
+                          <h4 className="mb-1">{stats.total_transactions}</h4>
+                          <p className="text-muted mb-0">Total Transactions</p>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Col>
+                <Col xl={3} lg={6} md={6} sm={6} xs={12} className="mb-3">
+                  <Card className="stat-card h-100">
+                    <CardBody>
+                      <div className="d-flex align-items-center">
+                        <div className="stat-icon bg-warning flex-shrink-0">
+                          <Users size={24} />
+                        </div>
+                        <div className="ms-3 flex-grow-1">
+                          <h4 className="mb-1">{wallets.length > 0 ? new Set(wallets.map(w => w.owner_id)).size : 0}</h4>
+                          <p className="text-muted mb-0">Active Users</p>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Col>
+              </Row>
+            )}
 
-        {/* Tabs */}
-        <Card>
-          <CardHeader>
-            <div className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Digital Wallet Management</h5>
-              <div>
-                <Button 
-                  color="primary" 
-                  className="me-2"
-                  onClick={handleCreateWallet}
-                >
-                  <Plus size={16} className="me-1" />
-                  Create Wallet
-                </Button>
-                <Button 
-                  color="success"
-                  onClick={() => setTransactionModalOpen(true)}
-                >
-                  <Plus size={16} className="me-1" />
-                  Add Transaction
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardBody>
-            <Nav tabs>
-              <NavItem>
-                <NavLink
-                  className={activeTab === '1' ? 'active' : ''}
-                  onClick={() => setActiveTab('1')}
-                >
-                  Wallets ({wallets.length})
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink
-                  className={activeTab === '2' ? 'active' : ''}
-                  onClick={() => setActiveTab('2')}
-                >
-                  Transactions ({transactions.length})
-                </NavLink>
-              </NavItem>
-            </Nav>
-
-            <TabContent activeTab={activeTab} className="mt-3">
-              <TabPane tabId="1">
-                {/* Wallets Grid */}
-                {wallets.length > 0 ? (
-                  <Row>
-                    {wallets.map(wallet => (
-                      <Col key={wallet.id} xl={4} lg={6} md={6} sm={12} className="mb-4">
-                        <WalletCard
-                          wallet={wallet}
-                          onEdit={handleEditWallet}
-                          onDelete={handleDeleteWallet}
-                          onView={handleViewWallet}
-                          onAddTransaction={handleAddTransaction}
-                        />
-                      </Col>
-                    ))}
-                  </Row>
-                ) : (
-                  <div className="text-center py-5">
-                    <CreditCard size={48} className="text-muted mb-3" />
-                    <h5>No wallets found</h5>
-                    <p className="text-muted">Create your first wallet to get started</p>
-                    <Button color="primary" onClick={handleCreateWallet}>
+            {/* Main Content Card */}
+            <Card>
+              <CardHeader>
+                <div className="d-flex justify-content-between align-items-center flex-wrap">
+                  <h5 className="mb-0">Digital Wallet Management</h5>
+                  <div className="d-flex gap-2 flex-wrap">
+                    <Button 
+                      color="primary" 
+                      size="sm"
+                      onClick={handleCreateWallet}
+                      className="d-flex align-items-center"
+                    >
                       <Plus size={16} className="me-1" />
-                      Create Wallet
+                      <span className="d-none d-sm-inline">Create Wallet</span>
+                    </Button>
+                    <Button 
+                      color="success"
+                      size="sm"
+                      onClick={() => setTransactionModalOpen(true)}
+                      className="d-flex align-items-center"
+                    >
+                      <Plus size={16} className="me-1" />
+                      <span className="d-none d-sm-inline">Add Transaction</span>
                     </Button>
                   </div>
-                )}
-              </TabPane>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <Nav tabs className="nav-tabs-custom">
+                  <NavItem>
+                    <NavLink
+                      className={activeTab === '1' ? 'active' : ''}
+                      onClick={() => setActiveTab('1')}
+                    >
+                      <span className="d-none d-sm-inline">Wallets</span>
+                      <span className="d-inline d-sm-none">💳</span>
+                      <span className="ms-1">({wallets.length})</span>
+                    </NavLink>
+                  </NavItem>
+                  <NavItem>
+                    <NavLink
+                      className={activeTab === '2' ? 'active' : ''}
+                      onClick={() => setActiveTab('2')}
+                    >
+                      <span className="d-none d-sm-inline">Transactions</span>
+                      <span className="d-inline d-sm-none">📊</span>
+                      <span className="ms-1">({filteredTransactions.length})</span>
+                    </NavLink>
+                  </NavItem>
+                </Nav>
 
-              <TabPane tabId="2">
-                {/* Transactions Table */}
-                {selectedWallet && (
-                  <div className="mb-3 p-3 bg-light rounded">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <h6 className="mb-1">Showing transactions for: <strong>{selectedWallet.name}</strong></h6>
-                        <small className="text-muted">
-                          {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} found
-                        </small>
+                <TabContent activeTab={activeTab} className="mt-4">
+                  <TabPane tabId="1">
+                    {/* Wallets Grid */}
+                    {wallets.length > 0 ? (
+                      <Row>
+                        {wallets.map(wallet => (
+                          <Col key={wallet.id} xxl={4} xl={6} lg={6} md={6} sm={12} xs={12} className="mb-4">
+                            <WalletCard
+                              wallet={wallet}
+                              onEdit={handleEditWallet}
+                              onDelete={handleDeleteWallet}
+                              onView={handleViewWallet}
+                              onAddTransaction={handleAddTransaction}
+                            />
+                          </Col>
+                        ))}
+                      </Row>
+                    ) : (
+                      <div className="text-center py-5">
+                        <div className="empty-state">
+                          <CreditCard size={48} className="text-muted mb-3" />
+                          <h5>No wallets found</h5>
+                          <p className="text-muted">Create your first wallet to get started</p>
+                          <Button color="primary" onClick={handleCreateWallet}>
+                            <Plus size={16} className="me-1" />
+                            Create Wallet
+                          </Button>
+                        </div>
                       </div>
-                      <Button 
-                        color="outline-secondary" 
-                        size="sm"
-                        onClick={handleClearWalletFilter}
-                      >
-                        Clear Filter
-                      </Button>
+                    )}
+                  </TabPane>
+
+                  <TabPane tabId="2">
+                    {/* Transactions Filter Info */}
+                    {selectedWallet && (
+                      <div className="mb-3 p-3 bg-light rounded">
+                        <Row>
+                          <Col md={8} sm={12}>
+                            <h6 className="mb-1">Showing transactions for: <strong>{selectedWallet.name}</strong></h6>
+                            <small className="text-muted">
+                              {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} found
+                            </small>
+                          </Col>
+                          <Col md={4} sm={12} className="text-md-end text-start mt-2 mt-md-0">
+                            <Button 
+                              color="outline-secondary" 
+                              size="sm"
+                              onClick={handleClearWalletFilter}
+                            >
+                              Clear Filter
+                            </Button>
+                          </Col>
+                        </Row>
+                      </div>
+                    )}
+                    
+                    {/* Transactions Table */}
+                    <div className="table-responsive">
+                      <TransactionTable
+                        transactions={filteredTransactions}
+                        onViewTransaction={handleViewTransaction}
+                        onExport={handleExportTransactions}
+                      />
                     </div>
-                  </div>
-                )}
-                <TransactionTable
-                  transactions={filteredTransactions}
-                  onViewTransaction={handleViewTransaction}
-                  onExport={handleExportTransactions}
-                />
-              </TabPane>
-            </TabContent>
-          </CardBody>
-        </Card>
+                  </TabPane>
+                </TabContent>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
       </Container>
 
       {/* Modals */}

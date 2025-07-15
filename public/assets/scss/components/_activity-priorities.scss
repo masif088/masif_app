@@ -1,0 +1,140 @@
+// Activity Priorities Styling
+.priority-list {
+    .priority-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #e8e8e8;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .priority-color-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .priority-actions {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        &:hover .priority-actions {
+            opacity: 1;
+        }
+
+        strong {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        small {
+            color: #6c757d;
+            font-size: 12px;
+        }
+    }
+}
+
+// Priority Modal Styling
+.modal {
+    .priority-color-preview {
+        .color-preview-container {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+    }
+}
+
+// Badge variations for priority levels
+.badge {
+    &.badge-priority-level {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+}
+
+// Priority page specific styling
+.page-body {
+    .priority-management-card {
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e3e6f0;
+            
+            h5 {
+                margin-bottom: 0;
+                font-weight: 600;
+                color: #5a5c69;
+            }
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+    }
+
+    .priority-empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .priority-list {
+        .priority-item {
+            .row {
+                .col-md-3,
+                .col-md-2 {
+                    margin-bottom: 8px;
+                }
+            }
+        }
+    }
+}
+
+// Dark mode support (if applicable)
+[data-theme="dark"] {
+    .priority-list {
+        .priority-item {
+            border-bottom-color: #404040;
+
+            &:hover {
+                background-color: #2d3748;
+            }
+
+            strong {
+                color: #e2e8f0;
+            }
+
+            small {
+                color: #a0aec0;
+            }
+        }
+    }
+} 

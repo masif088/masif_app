@@ -4,8 +4,10 @@ import React, { Fragment, useState, useEffect } from 'react'
 import { Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import { toast } from 'react-toastify';
 import { ActivityService } from 'utils/supabase/activityService';
+import { CompanyService } from 'utils/supabase/companyService';
 import CommonButtons from "@/components/Buttons/common/CommonButtons";
 import { User, ActivityPriority, CreateActivityFormData, ActivityStatus, ActivityType } from 'Types/ActivityType';
+import { Company } from 'Types/CompanyType';
 import dynamic from 'next/dynamic';
 // import CustomEditor from '@/components/Editor';
 // import { defaultButtonsData, defaultButtonsHeadingData, DefaultButtonsHeading } from 'Data/Ui-kits/CommonButtonsData';
@@ -19,6 +21,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
     const [modal, setModal] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [users, setUsers] = useState<User[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
     const [priorities, setPriorities] = useState<ActivityPriority[]>([]);
     const [statuses, setStatuses] = useState<ActivityStatus[]>([]);
     const [activityTypes, setActivityTypes] = useState<ActivityType[]>([]);
@@ -29,14 +32,14 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
         description: '',
         status: 'Open',
         user_id: '',
-        due_date: '',
+        company_id: undefined,
         priority: '',
         type: '',
         tags: '',
         note: '',
         link: '',
         activity_start: '',
-        activity_end: ''
+        activity_end: '',
     });
 
     const toggle = () => { 
@@ -48,14 +51,14 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                 description: '',
                 status: 'Open',
                 user_id: '',
-                due_date: '',
+                company_id: undefined,
                 priority: '',
                 type: '',
                 tags: '',
                 note: '',
                 link: '',
                 activity_start: '',
-                activity_end: ''
+                activity_end: '',
             });
         }
     };
@@ -63,6 +66,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
     // Fetch users, priorities, and statuses on component mount
     useEffect(() => {
         fetchUsers();
+        fetchCompanies();
         fetchPriorities();
         fetchStatuses();
         fetchActivityTypes();
@@ -75,6 +79,16 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
         } catch (error) {
             console.error('Error fetching users:', error);
             toast.error('Failed to load users');
+        }
+    };
+
+    const fetchCompanies = async () => {
+        try {
+            const data = await CompanyService.getAllCompanies();
+            setCompanies(data);
+        } catch (error) {
+            console.error('Error fetching companies:', error);
+            toast.error('Failed to load companies');
         }
     };
 
@@ -113,7 +127,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: name === 'company_id' ? (value ? Number(value) : undefined) : value
         }));
     };
 
@@ -130,7 +144,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
 
         try {
             // Validate required fields
-            if (!formData.title || !formData.description || !formData.user_id) {
+            if (!formData.title || !formData.description || !formData.status) {
                 toast.error('Please fill in all required fields');
                 return;
             }
@@ -254,6 +268,30 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                         
                         <Col md={6}>
                             <FormGroup>
+                                <Label for="company_id" className="form-label">
+                                    Company
+                                </Label>
+                                <Input
+                                    id="company_id"
+                                    name="company_id"
+                                    type="select"
+                                    value={formData.company_id || ''}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">Select Company</option>
+                                    {companies.map((company) => (
+                                        <option key={company.id} value={company.id}>
+                                            {company.name}
+                                        </option>
+                                    ))}
+                                </Input>
+                            </FormGroup>
+                        </Col>
+                    </Row>
+
+                    <Row>
+                        <Col md={6}>
+                            <FormGroup>
                                 <Label for="status" className="form-label">
                                     Status
                                 </Label>
@@ -273,9 +311,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                                 </Input>
                             </FormGroup>
                         </Col>
-                    </Row>
-
-                    <Row>
+                        
                         <Col md={6}>
                             <FormGroup>
                                 <Label for="priority" className="form-label">
@@ -295,21 +331,6 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                                         </option>
                                     ))}
                                 </Input>
-                            </FormGroup>
-                        </Col>
-                        
-                        <Col md={6}>
-                            <FormGroup>
-                                <Label for="due_date" className="form-label">
-                                    Due Date
-                                </Label>
-                                <Input
-                                    id="due_date"
-                                    name="due_date"
-                                    type="datetime-local"
-                                    value={formData.due_date}
-                                    onChange={handleInputChange}
-                                />
                             </FormGroup>
                         </Col>
                     </Row>
@@ -333,7 +354,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                         <Col md={6}>
                             <FormGroup>
                                 <Label for="activity_end" className="form-label">
-                                    End Date
+                                    Activity End <span className="txt-danger">*</span>
                                 </Label>
                                 <Input
                                     id="activity_end"

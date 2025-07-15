@@ -11,6 +11,7 @@ const EditorComponent = ({ setEdit, getEdit }: propsTypes) => {
     return (
         <CKEditor
             editor={ClassicEditor as any}
+            data={getEdit}
             onReady={(editor) => {
                 console.log('Editor is ready to use!', editor);
             }}
@@ -18,7 +19,6 @@ const EditorComponent = ({ setEdit, getEdit }: propsTypes) => {
                 toolbar: {
                     items: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', 'underline', '|', 'link', 'insertImageViaUrl', 'mediaEmbed', 'insertTable', 'blockQuote', '|', 'bulletedList', 'numberedList', 'outdent', 'indent'],
                 },
-                initialData: getEdit,
             }}
             onChange={(event, editor) => {
                 setEdit(editor.getData())

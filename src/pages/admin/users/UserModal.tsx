@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Row, Col, FormGroup, Label, Input } from 'reactstrap';
 import { ProfileData } from 'utils/supabase/profileService';
+
+// Extend ProfileData to include company_id
+interface ExtendedProfileData extends Omit<ProfileData, 'company'> {
+  company_id?: string;
+}
 import { createClient } from 'utils/supabase/client';
+import { CompanyService } from 'utils/supabase/companyService';
+import { Company } from 'Types/CompanyType';
 import { toast } from 'react-toastify';
 import SkillsInput from '../profile/EditProfile/SkillsInput';
 import Image from 'next/image';
@@ -15,14 +22,36 @@ interface UserModalProps {
 }
 
 const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSaved }) => {
-  const [formData, setFormData] = useState<Partial<ProfileData>>({});
+  const [formData, setFormData] = useState<Partial<ExtendedProfileData>>({});
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
 
   const supabase = createClient();
+
+  // Load companies when modal opens
+  useEffect(() => {
+    if (isOpen && mode !== 'view') {
+      loadCompanies();
+    }
+  }, [isOpen, mode]);
+
+  const loadCompanies = async () => {
+    try {
+      setLoadingCompanies(true);
+      const companiesData = await CompanyService.getAllCompanies();
+      setCompanies(companiesData);
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      toast.error('Failed to load companies');
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
 
   useEffect(() => {
     if (user && mode !== 'create') {
@@ -31,7 +60,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
         last_name: user.last_name || '',
         email: user.email || '',
         username: user.username || '',
-        company: user.company || '',
+        company_id: (user as any).company_id || '',
         role: user.role || '',
         phone: user.phone || '',
         address: user.address || '',
@@ -53,7 +82,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
     setImageFile(null);
   }, [user, mode, isOpen]);
 
-  const handleInputChange = (field: keyof ProfileData, value: string) => {
+  const handleInputChange = (field: keyof ExtendedProfileData, value: string) => {
     if (mode === 'view') return; // Read-only in view mode
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -130,27 +159,32 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
       };
 
       if (mode === 'create') {
-        // Create user in auth and then in users table
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email!,
+        // Create user directly with Supabase
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: userData.email!,
           password: password,
-          user_metadata: {
-            first_name: formData.first_name,
-            last_name: formData.last_name
+          options: {
+            data: {
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              username: userData.username
+            }
           }
         });
 
         if (authError) throw authError;
 
-        // Insert into users table
-        const { error: userError } = await supabase
-          .from('users')
-          .insert([{
-            id: authData.user.id,
-            ...userData
-          }]);
+        if (authData.user) {
+          // Create profile record
+          const { error: profileError } = await supabase
+            .from('users')
+            .insert({
+              ...userData,
+              id: authData.user.id
+            });
 
-        if (userError) throw userError;
+          if (profileError) throw profileError;
+        }
       } else {
         // Update existing user
         const { error } = await supabase
@@ -305,11 +339,19 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
               <FormGroup>
                 <Label>Company</Label>
                 <Input
-                  type="text"
-                  value={formData.company || ''}
-                  onChange={(e) => handleInputChange('company', e.target.value)}
-                  disabled={isReadOnly}
-                />
+                  type="select"
+                  value={formData.company_id || ''}
+                  onChange={(e) => handleInputChange('company_id', e.target.value)}
+                  disabled={isReadOnly || loadingCompanies}
+                >
+                  <option value="">Select Company</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </Input>
+                {loadingCompanies && <small className="text-muted">Loading companies...</small>}
               </FormGroup>
             </Col>
             <Col md={6}>

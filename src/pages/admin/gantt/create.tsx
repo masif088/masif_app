@@ -29,14 +29,14 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
         description: '',
         status: 'Open',
         user_id: '',
-        due_date: '',
+        company_id: undefined,
         priority: '',
         type: '',
         tags: '',
         note: '',
         link: '',
         activity_start: '',
-        activity_end: ''
+        activity_end: '',
     });
 
     const toggle = () => { 
@@ -48,14 +48,14 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                 description: '',
                 status: 'Open',
                 user_id: '',
-                due_date: '',
+                company_id: undefined,
                 priority: '',
                 type: '',
                 tags: '',
                 note: '',
                 link: '',
                 activity_start: '',
-                activity_end: ''
+                activity_end: '',
             });
         }
     };
@@ -130,7 +130,7 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
 
         try {
             // Validate required fields
-            if (!formData.title || !formData.description || !formData.user_id) {
+            if (!formData.title || !formData.description || !formData.status) {
                 toast.error('Please fill in all required fields');
                 return;
             }
@@ -300,23 +300,6 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                         
                         <Col md={6}>
                             <FormGroup>
-                                <Label for="due_date" className="form-label">
-                                    Due Date
-                                </Label>
-                                <Input
-                                    id="due_date"
-                                    name="due_date"
-                                    type="datetime-local"
-                                    value={formData.due_date}
-                                    onChange={handleInputChange}
-                                />
-                            </FormGroup>
-                        </Col>
-                    </Row>
-
-                    <Row>
-                        <Col md={6}>
-                            <FormGroup>
                                 <Label for="activity_start" className="form-label">
                                     Start Date
                                 </Label>
@@ -329,11 +312,13 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
                                 />
                             </FormGroup>
                         </Col>
-                        
+                    </Row>
+
+                    <Row>
                         <Col md={6}>
                             <FormGroup>
                                 <Label for="activity_end" className="form-label">
-                                    End Date
+                                    Activity End <span className="txt-danger">*</span>
                                 </Label>
                                 <Input
                                     id="activity_end"

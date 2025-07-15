@@ -25,7 +25,6 @@ const EditActivity: React.FC<EditActivityProps> = ({ activity, isOpen, onClose, 
         description: '',
         status: 'Open',
         user_id: '',
-        due_date: '',
         priority: '',
         type: '',
         tags: '',
@@ -68,7 +67,6 @@ const EditActivity: React.FC<EditActivityProps> = ({ activity, isOpen, onClose, 
                 description: activity.description || '',
                 status: activity.status || 'Open',
                 user_id: activity.user_id || '',
-                due_date: formatDateTimeForInput(activity.due_date) || '',
                 priority: activity.priority || '',
                 type: activity.type || '',
                 tags: activity.tags || '',
@@ -319,23 +317,6 @@ const EditActivity: React.FC<EditActivityProps> = ({ activity, isOpen, onClose, 
                         
                         <Col md={6}>
                             <FormGroup>
-                                <Label for="due_date" className="form-label">
-                                    Due Date
-                                </Label>
-                                <Input
-                                    id="due_date"
-                                    name="due_date"
-                                    type="datetime-local"
-                                    value={formData.due_date}
-                                    onChange={handleInputChange}
-                                />
-                            </FormGroup>
-                        </Col>
-                    </Row>
-
-                    <Row>
-                        <Col md={6}>
-                            <FormGroup>
                                 <Label for="activity_start" className="form-label">
                                     Start Date
                                 </Label>
@@ -348,11 +329,13 @@ const EditActivity: React.FC<EditActivityProps> = ({ activity, isOpen, onClose, 
                                 />
                             </FormGroup>
                         </Col>
-                        
+                    </Row>
+
+                    <Row>
                         <Col md={6}>
                             <FormGroup>
                                 <Label for="activity_end" className="form-label">
-                                    End Date
+                                    Activity End <span className="txt-danger">*</span>
                                 </Label>
                                 <Input
                                     id="activity_end"

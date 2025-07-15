@@ -1,8 +1,8 @@
 import TimeLineCard from "@/components/TimeLineCard";
 import PaperNote from "src/components/PaperNote";
 import Breadcrumbs from "CommonElements/Breadcrumbs";
-import React from "react";
-import {Col, Container, Row} from "reactstrap";
+import React, { useState } from "react";
+import {Button, Col, Container, Row} from "reactstrap";
 import {Default_Util, ImgPath, Welcometext, Welcometocuba, WhatsNew} from "utils/Constant";
 import GreetingCard from "@/components/GreetingCard";
 import Widgets1 from "../../../../CommonElements/Widgets1";
@@ -11,8 +11,58 @@ import InfoCard from "@/components/InfoCard";
 import OrderProfit from "@/components/dashboard/WidgetsWrapper/OrderProfit";
 import GoodsReturn from "@/components/dashboard/WidgetsWrapper/GoodsReturn";
 import Widgets2 from "../../../../CommonElements/Widgets2";
+import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 const Dashboard = () => {
+    const [fetchingEmails, setFetchingEmails] = useState(false);
+
+    const handleFetchEmails = async () => {
+        // if (!activity) return;
+        
+        setFetchingEmails(true);
+        try {
+            const user = JSON.parse(Cookies.get("user") || "{}");
+            const response = await fetch('/api/imap/fetch-emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+        
+                    userId: user.id,
+                    days: 7 // Fetch emails from last 7 days
+                })
+            });
+        
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast.success(data.message);
+                fetchActivityNotes(); // Refresh notes to show new emails
+            } else {
+                toast.error(data.message || 'Failed to fetch emails');
+            }
+        } catch (error) {
+            console.error('Error fetching emails:', error);
+            toast.error('Failed to fetch emails from inbox');
+        } finally {
+            setFetchingEmails(false);
+        }
+    };
+
+    const fetchActivityNotes = async () => {
+        try {
+            // const data = await ActivityService.getActivityNotes(Number(id));
+            // setNotes(data);
+        } catch (error) {
+            console.error("Error fetching notes:", error);
+            toast.error("Failed to load notes");
+        }
+    };
+
+
     return (<div className="page-body">
         <Breadcrumbs
             title={"Dashboard"}
@@ -21,6 +71,26 @@ const Dashboard = () => {
         />
 
         <Container fluid={true}>
+
+        <Button
+                                                color="info"
+                                                size="sm"
+                                                onClick={handleFetchEmails}
+                                                disabled={fetchingEmails}
+                                            >
+                                                {fetchingEmails ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                        Fetching...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="icon-inbox"></i> Fetch Emails
+                                                    </>
+                                                )}
+                                            </Button>
+                                            <br /><br />
+                                            
             <Row className="widget-grid">
                 <GreetingCard
                     imgPath={ImgPath}

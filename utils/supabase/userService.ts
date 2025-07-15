@@ -77,44 +77,22 @@ export class UserService {
   // Create new user
   static async createUser(userData: CreateUserData): Promise<ProfileData | null> {
     try {
-      // Create user in auth
-      const { data: authData, error: authError } = await this.supabase.auth.admin.createUser({
-        email: userData.email,
-        password: userData.password,
-        user_metadata: {
-          first_name: userData.first_name,
-          last_name: userData.last_name
-        }
+      // Create user via API route
+      const response = await fetch('/api/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
       });
 
-      if (authError) throw authError;
+      const result = await response.json();
 
-      // Insert into users table
-      const { data, error } = await this.supabase
-        .from('users')
-        .insert([{
-          id: authData.user.id,
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          email: userData.email,
-          username: userData.username,
-          company: userData.company,
-          role: userData.role,
-          phone: userData.phone,
-          address: userData.address,
-          city: userData.city,
-          postal_code: userData.postal_code,
-          country: userData.country,
-          about_me: userData.about_me,
-          website: userData.website,
-          skills: userData.skills,
-          avatar: userData.avatar
-        }])
-        .select()
-        .single();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create user');
+      }
 
-      if (error) throw error;
-      return data;
+      return result.user;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;

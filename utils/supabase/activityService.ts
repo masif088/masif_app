@@ -1,7 +1,8 @@
 import { createClient } from './client';
-import { Activity, User, ActivityPriority, CreateActivityFormData, ActivityFilters, ActivityStatus, ActivityType, ActivityNote, EmailData, ContactEmail, CreateContactEmailData } from '../../Types/ActivityType';
+import { Activity, User, ActivityPriority, CreateActivityPriorityData, CreateActivityFormData, ActivityFilters, ActivityStatus, CreateActivityStatusData, ActivityType, ActivityNote, EmailData, ContactEmail, CreateContactEmailData } from '../../Types/ActivityType';
 import { log } from 'console';
 import Cookies from 'js-cookie';
+import { EmailMessage } from 'utils/imapService';
 
 export class ActivityService {
     private static supabase = createClient();
@@ -148,7 +149,7 @@ export class ActivityService {
             const { data, error } = await this.supabase
                 .from('activity_priorities')
                 .select('*')
-                .order('title', { ascending: true });
+                .order('level', { ascending: true });
 
             if (error) throw error;
             return data || [];
@@ -158,17 +159,159 @@ export class ActivityService {
         }
     }
 
+    // Create a new activity priority
+    static async createActivityPriority(priorityData: CreateActivityPriorityData): Promise<ActivityPriority | null> {
+        try {
+            const dataToInsert = {
+                ...priorityData,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_priorities')
+                .insert([dataToInsert])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating activity priority:', error);
+            throw error;
+        }
+    }
+
+    // Update an activity priority
+    static async updateActivityPriority(title: string, updates: Partial<ActivityPriority>): Promise<ActivityPriority | null> {
+        try {
+            const { data, error } = await this.supabase
+                .from('activity_priorities')
+                .update({
+                    ...updates,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('title', title)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error updating activity priority:', error);
+            throw error;
+        }
+    }
+
+    // Delete an activity priority
+    static async deleteActivityPriority(title: string): Promise<void> {
+        try {
+            const { error } = await this.supabase
+                .from('activity_priorities')
+                .delete()
+                .eq('title', title);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error deleting activity priority:', error);
+            throw error;
+        }
+    }
+
+    // Get activity priority by title
+    static async getActivityPriorityByTitle(title: string): Promise<ActivityPriority | null> {
+        try {
+            const { data, error } = await this.supabase
+                .from('activity_priorities')
+                .select('*')
+                .eq('title', title)
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error fetching activity priority:', error);
+            throw error;
+        }
+    }
+
     static async getActivityStatus(): Promise<ActivityStatus[]> {
         try {
             const { data, error } = await this.supabase
                 .from('activity_statuses')
                 .select('*')
-                .order('order', { ascending: true });
+                .order('level', { ascending: true });
 
             if (error) throw error;
             return data || [];
         } catch (error) {
-            console.error('Error fetching activity priorities:', error);
+            console.error('Error fetching activity statuses:', error);
+            throw error;
+        }
+    }
+
+    // Alias for getActivityStatus (plural)
+    static async getActivityStatuses(): Promise<ActivityStatus[]> {
+        return this.getActivityStatus();
+    }
+
+    // Create a new activity status
+    static async createActivityStatus(statusData: CreateActivityStatusData): Promise<ActivityStatus | null> {
+        try {
+            const dataToInsert = {
+                ...statusData,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_statuses')
+                .insert([dataToInsert])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating activity status:', error);
+            throw error;
+        }
+    }
+
+    // Update an activity status by title
+    static async updateActivityStatus(title: string, updates: Partial<ActivityStatus>): Promise<ActivityStatus | null> {
+        try {
+            const dataToUpdate = {
+                ...updates,
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_statuses')
+                .update(dataToUpdate)
+                .eq('title', title)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error updating activity status:', error);
+            throw error;
+        }
+    }
+
+    // Delete an activity status by title
+    static async deleteActivityStatus(title: string): Promise<void> {
+        try {
+            const { error } = await this.supabase
+                .from('activity_statuses')
+                .delete()
+                .eq('title', title);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error deleting activity status:', error);
             throw error;
         }
     }
@@ -297,6 +440,28 @@ export class ActivityService {
         }
     }
 
+    static async createActivityNoteWithTime(noteData: Omit<ActivityNote, 'id'>): Promise<ActivityNote | null> {
+        try {
+            const dataToInsert = {
+                ...noteData,
+                // created_at: new Date().toISOString(),
+                // updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_notes')
+                .insert([dataToInsert])
+                .select('*, users(*)')
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating activity note:', error);
+            throw error;
+        }
+    }
+
     static async updateActivityNote(id: number, updates: Partial<ActivityNote>): Promise<ActivityNote | null> {
         try {
             const updateData = {
@@ -347,12 +512,13 @@ export class ActivityService {
                     cc: emailData.cc,
                     bcc: emailData.bcc,
                     subject: emailData.subject,
-                    body: emailData.body,
+                    body: emailData.body + `<br>This from ticket/activity <span style="color: red;" id="activity-id-${emailData.activity_id}">#${emailData.activity_id}</span> please let me know if you have question<br><br><!-- ACTIVITY_METADATA: {"activity_id": ${emailData.activity_id}} -->`,
                     activity_id: emailData.activity_id,
                     user_id: emailData.user_id
                 }),
             });
 
+            console.log('Sending email:', emailData);
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to send email');
@@ -487,6 +653,34 @@ export class ActivityService {
             if (error) throw error;
         } catch (error) {
             console.error('Error toggling favorite:', error);
+            throw error;
+        }
+    }
+
+    static async createActivityFromEmail(email: EmailMessage): Promise<Activity | null> {
+        try {
+            const dataToInsert = {
+                title: email.subject,
+                description: email.body,
+                user_id: JSON.parse(Cookies.get('user') || '{}').id,
+                status: 'Open',
+                priority: 'Low',
+                type: 'Email',
+                column_index: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activities')
+                .insert([dataToInsert])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating activity from email:', error);
             throw error;
         }
     }

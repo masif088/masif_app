@@ -145,11 +145,7 @@ const ContactEmailManager: React.FC<ContactEmailManagerProps> = ({ onSelectConta
                                         <Col md={3}>
                                             <Badge color="info">{contact.category}</Badge>
                                         </Col>
-                                        <Col md={3}>
-                                            {contact.notes && (
-                                                <small className="text-muted">{contact.notes}</small>
-                                            )}
-                                        </Col>
+                                       
                                         <Col md={2}>
                                             <div className="d-flex gap-1">
                                                 <Button
