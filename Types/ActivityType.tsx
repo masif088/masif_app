@@ -108,6 +108,15 @@ export interface CreateContactEmailData {
 export interface ActivityType {
     id: number;
     title: string;
+    sub_title: string;
+    description?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateActivityTypeData {
+    title: string;
+    sub_title: string;
     description?: string;
 }
 

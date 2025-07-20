@@ -1,5 +1,5 @@
 import { createClient } from './client';
-import { Activity, User, ActivityPriority, CreateActivityPriorityData, CreateActivityFormData, ActivityFilters, ActivityStatus, CreateActivityStatusData, ActivityType, ActivityNote, EmailData, ContactEmail, CreateContactEmailData } from '../../Types/ActivityType';
+import { Activity, User, ActivityPriority, CreateActivityPriorityData, CreateActivityFormData, ActivityFilters, ActivityStatus, CreateActivityStatusData, ActivityType, CreateActivityTypeData, ActivityNote, EmailData, ContactEmail, CreateContactEmailData } from '../../Types/ActivityType';
 import { log } from 'console';
 import Cookies from 'js-cookie';
 import { EmailMessage } from 'utils/imapService';
@@ -328,6 +328,68 @@ export class ActivityService {
             return data || [];
         } catch (error) {
             console.error('Error fetching activity types:', error);
+            throw error;
+        }
+    }
+
+    // Create a new activity type
+    static async createActivityType(typeData: CreateActivityTypeData): Promise<ActivityType | null> {
+        try {
+            const dataToInsert = {
+                ...typeData,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_types')
+                .insert([dataToInsert])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating activity type:', error);
+            throw error;
+        }
+    }
+
+    // Update an activity type
+    static async updateActivityType(id: number, updates: Partial<CreateActivityTypeData>): Promise<ActivityType | null> {
+        try {
+            const updateData = {
+                ...updates,
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('activity_types')
+                .update(updateData)
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error updating activity type:', error);
+            throw error;
+        }
+    }
+
+    // Delete an activity type
+    static async deleteActivityType(id: number): Promise<boolean> {
+        try {
+            const { error } = await this.supabase
+                .from('activity_types')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            console.error('Error deleting activity type:', error);
             throw error;
         }
     }

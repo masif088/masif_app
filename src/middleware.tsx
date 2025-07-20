@@ -30,5 +30,6 @@ export const config = {
     "/editor/:path*",
     "/pages/sample-page",
     "/authentication/login",
+    "/admin/:path*",
   ],
 };
