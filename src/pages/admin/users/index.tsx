@@ -122,10 +122,17 @@ const UsersPage = () => {
                     <h4 className="card-title mb-0">Users Management</h4>
                   </Col>
                   <Col md={6} className="text-end">
-                    <Button color="primary" onClick={openCreateModal}>
-                      <i className="fa fa-plus me-2"></i>
+                    <Button 
+                      color="primary" 
+                      outline
+                      size="sm"
+                      onClick={openCreateModal}
+                    >
+                      <i className="icon-plus me-2"></i>
                       Add User
                     </Button>
+
+                    
                   </Col>
                 </Row>
               </CardHeader>
@@ -213,9 +220,9 @@ const UsersPage = () => {
                             <td>{user.role || '-'}</td>
                             <td>{user.phone || '-'}</td>
                             <td>
-                              <div className="btn-group" role="group">
+                              <div className="d-flex gap-1 justify-content-start">
                                 <Button
-                                  color="info"
+                                  color="outline-info"
                                   size="sm"
                                   onClick={() => openViewModal(user)}
                                   title="View"
@@ -223,7 +230,7 @@ const UsersPage = () => {
                                   <i className="fa fa-eye"></i>
                                 </Button>
                                 <Button
-                                  color="primary"
+                                  color="outline-warning"
                                   size="sm"
                                   onClick={() => openEditModal(user)}
                                   title="Edit"
@@ -231,7 +238,7 @@ const UsersPage = () => {
                                   <i className="fa fa-edit"></i>
                                 </Button>
                                 <Button
-                                  color="danger"
+                                  color="outline-danger"
                                   size="sm"
                                   onClick={() => user.id && handleDeleteUser(user.id)}
                                   title="Delete"

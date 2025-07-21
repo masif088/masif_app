@@ -103,4 +103,5 @@ export interface CompanyFormData {
   founded_date: string;
   leader_id?: string;
   logo?: File | null;
+  is_active: boolean;
 } 

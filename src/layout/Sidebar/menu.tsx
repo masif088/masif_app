@@ -15,6 +15,33 @@ export const MenuList: sidebarMenuType[] = [
     ],
   },
   {
+    title: "Activity",
+    menucontent: "activity",
+    Items: [
+      {
+        path: "/admin/activity",
+        icon: "material-symbols-light:sticky-note-2-outline",
+        type: "link",
+        title: "Activity",
+        id: 202,
+      },
+      {
+        path: "/admin/activity_statuses",
+        icon: "material-symbols-light:elevation-outline",
+        type: "link",
+        title: "Activity Status",
+        id: 204,
+      },    
+      {
+        path: "/admin/activity_priorities",
+        icon: "material-symbols-light:flag-outline",
+        type: "link",
+        title: "Activity Priorities",
+        id: 203,
+      },
+    ],
+  },
+  {
     title: "Finance",
     menucontent: "money",
     Items: [
@@ -66,7 +93,7 @@ export const MenuList: sidebarMenuType[] = [
     menucontent: "company",
     Items: [
       {
-        path: "/admin/customer",
+        path: "/admin/company",
         icon: "material-symbols-light:business-center",
         type: "link",
         title: "Companies",
@@ -74,33 +101,7 @@ export const MenuList: sidebarMenuType[] = [
       },
     ],
   },
-  {
-    title: "Activity",
-    menucontent: "activity",
-    Items: [
-      {
-        path: "/admin/activity",
-        icon: "material-symbols-light:history",
-        type: "link",
-        title: "Activity",
-        id: 202,
-      },
-      {
-        path: "/admin/activity_statuses",
-        icon: "material-symbols-light:history",
-        type: "link",
-        title: "Activity Status",
-        id: 204,
-      },    
-      {
-        path: "/admin/activity_priorities",
-        icon: "material-symbols-light:flag",
-        type: "link",
-        title: "Activity Priorities",
-        id: 203,
-      },
-    ],
-  },
+ 
   
   {
     title: "Settings",

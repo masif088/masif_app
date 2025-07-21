@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { ActivityService } from 'utils/supabase/activityService';
 import { ActivityStatus, CreateActivityStatusData } from 'Types/ActivityType';
 import { toast } from 'react-toastify';
+import { Plus, Edit, Trash2 } from "react-feather";
 
 const ActivityStatusesPage = () => {
     const router = useRouter();
@@ -143,11 +144,12 @@ const ActivityStatusesPage = () => {
                                     <h5>Status Management</h5>
                                     <div className="d-flex gap-2">
                                         <Button 
-                                            color="outline-primary" 
+                                            color="primary" 
+                                            outline
                                             size="sm"
                                             onClick={() => setShowAddModal(true)}
                                         >
-                                            <i className="icon-plus"></i> Add Status
+                                            <Plus size={16} className="me-1" /> Add Status
                                         </Button>
                                     </div>
                                 </div>
@@ -193,7 +195,7 @@ const ActivityStatusesPage = () => {
                                                     </Col>
                                                     <Col md={1}>
                                                         <Badge color={status.color}>
-                                                            L{status.level}
+                                                            Level {status.level}
                                                         </Badge>
                                                     </Col>
                                                     <Col md={1}>
@@ -208,14 +210,14 @@ const ActivityStatusesPage = () => {
                                                     </Col>
                                                     <Col md={4}>
                                                         <div className="d-flex gap-1 justify-content-end">
-                                                            <Button
+                                                            {/* <Button
                                                                 color={status.is_active ? "outline-secondary" : "outline-success"}
                                                                 size="sm"
                                                                 onClick={() => toggleStatusActive(status)}
                                                                 title={status.is_active ? "Deactivate" : "Activate"}
                                                             >
                                                                 <i className={status.is_active ? "icon-pause" : "icon-play"}></i>
-                                                            </Button>
+                                                            </Button> */}
                                                             <Button
                                                                 color="outline-warning"
                                                                 size="sm"
@@ -223,15 +225,17 @@ const ActivityStatusesPage = () => {
                                                                     setEditingStatus(status);
                                                                     setShowEditModal(true);
                                                                 }}
+                                                                title="Edit Status"
                                                             >
-                                                                <i className="icon-pencil"></i>
+                                                                <Edit size={14} />
                                                             </Button>
                                                             <Button
                                                                 color="outline-danger"
                                                                 size="sm"
                                                                 onClick={() => handleDeleteStatus(status.title)}
+                                                                title="Delete Status"
                                                             >
-                                                                <i className="icon-trash"></i>
+                                                                <Trash2 size={14} />
                                                             </Button>
                                                         </div>
                                                     </Col>
@@ -334,7 +338,7 @@ const ActivityStatusesPage = () => {
                 </ModalBody>
                 <ModalFooter>
                     <Button color="secondary" onClick={() => setShowAddModal(false)}>Cancel</Button>
-                    <Button color="primary" onClick={handleAddStatus}>Add Status</Button>
+                    <Button color="info" onClick={handleAddStatus}>Add Status</Button>
                 </ModalFooter>
             </Modal>
 

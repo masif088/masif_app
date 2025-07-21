@@ -181,7 +181,8 @@ const CreateActivity: React.FC<CreateActivityProps> = ({ onActivityCreated }) =>
 
     return (
         <Fragment>
-            <Button color='info' type="button" onClick={toggle} className="btn btn-pill btn-primary btn-air-primary" icon="Plus">
+            <Button color='primary' type="button" outline onClick={toggle} className="" icon="Plus">
+            <i className="icon-plus me-2"></i>
                 Add Activity
             </Button>
             

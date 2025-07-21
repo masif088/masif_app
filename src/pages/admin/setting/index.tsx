@@ -342,12 +342,12 @@ const Settings = () => {
                             <CardHeader className="d-flex justify-content-between align-items-center">
                                 <h5 className="mb-0">Application Settings</h5>
                                 <Button 
-                                    color="primary" 
+                                    color="primary"
+                                    outline
+                                    size="sm"
                                     onClick={toggleModal}
-                                    className="d-flex align-items-center"
                                 >
-                                    <Icon icon="material-symbols:add" className="me-2" />
-                                    Add Setting
+                                    <i className="icon-plus"></i> Add Setting
                                 </Button>
                             </CardHeader>
                             <CardBody>
@@ -425,22 +425,20 @@ const Settings = () => {
                                                             {new Date(setting.updated_at).toLocaleDateString()}
                                                         </td>
                                                         <td>
-                                                            <div className="d-flex gap-2">
+                                                            <div className="d-flex gap-1">
                                                                 <Button
-                                                                    color="warning"
+                                                                    color="outline-warning"
                                                                     size="sm"
                                                                     onClick={() => handleEdit(setting)}
-                                                                    className="d-flex align-items-center"
                                                                 >
-                                                                    <Icon icon="material-symbols:edit" />
+                                                                    <i className="icon-pencil"></i>
                                                                 </Button>
                                                                 <Button
-                                                                    color="danger"
+                                                                    color="outline-danger"
                                                                     size="sm"
                                                                     onClick={() => handleDelete(setting.key)}
-                                                                    className="d-flex align-items-center"
                                                                 >
-                                                                    <Icon icon="material-symbols:delete" />
+                                                                    <i className="icon-trash"></i>
                                                                 </Button>
                                                             </div>
                                                         </td>
@@ -530,9 +528,8 @@ const Settings = () => {
                                 color="primary" 
                                 type="submit" 
                                 disabled={saving}
-                                className="d-flex align-items-center"
                             >
-                                {saving && <Icon icon="material-symbols:loading" className="me-2" />}
+                                {saving && <i className="icon-clock me-2"></i>}
                                 {editingKey ? 'Update Setting' : 'Create Setting'}
                             </Button>
                         </ModalFooter>

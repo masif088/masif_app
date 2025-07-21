@@ -123,7 +123,8 @@ const ActivityPrioritiesPage = () => {
                                     <h5>Priority Management</h5>
                                     <div className="d-flex gap-2">
                                         <Button 
-                                            color="outline-primary" 
+                                            color="primary" 
+                                            outline
                                             size="sm"
                                             onClick={() => setShowAddModal(true)}
                                         >
