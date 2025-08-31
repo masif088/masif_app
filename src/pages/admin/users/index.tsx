@@ -9,8 +9,10 @@ import UserModal from './UserModal';
 import UserStats from './UserStats';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const UsersPage = () => {
+  const { user, session, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<ProfileData[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,8 +23,10 @@ const UsersPage = () => {
   const supabase = createClient();
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    if (session && !authLoading) {
+      loadUsers();
+    }
+  }, [session, authLoading]);
 
   const loadUsers = async () => {
     try {
@@ -50,7 +54,7 @@ const UsersPage = () => {
     user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -105,6 +109,53 @@ const UsersPage = () => {
     }
   };
 
+  // Show loading state while authentication is in progress
+  if (authLoading) {
+    return (
+      <div className="page-body">
+        <Breadcrumbs title="Users Management" mainTitle="Users" parent={Users} />
+        <Container fluid>
+          <Row>
+            <Col md={12}>
+              <Card>
+                <CardBody className="text-center">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-2">Loading authentication...</p>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </div>
+    );
+  }
+
+  // Show error if not authenticated
+  if (!session || !user) {
+    return (
+      <div className="page-body">
+        <Breadcrumbs title="Users Management" mainTitle="Users" parent={Users} />
+        <Container fluid>
+          <Row>
+            <Col md={12}>
+              <Card>
+                <CardBody className="text-center">
+                  <h4>Authentication Required</h4>
+                  <p>Please log in to access this page.</p>
+                  <Link href="/authentication/login">
+                    <Button color="primary">Go to Login</Button>
+                  </Link>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </div>
+    );
+  }
+
   return (
     <div className="page-body">
       <Breadcrumbs title="Users Management" mainTitle="Users" parent={Users} />
@@ -122,6 +173,10 @@ const UsersPage = () => {
                     <h4 className="card-title mb-0">Users Management</h4>
                   </Col>
                   <Col md={6} className="text-end">
+                    <Link href="/admin/users/without-company" className="btn btn-warning me-2">
+                      <i className="fa fa-users me-1"></i>
+                      Users Without Company
+                    </Link>
                     <Button 
                       color="primary" 
                       outline
@@ -131,14 +186,12 @@ const UsersPage = () => {
                       <i className="icon-plus me-2"></i>
                       Add User
                     </Button>
-
-                    
                   </Col>
                 </Row>
               </CardHeader>
               <CardBody>
                 <Row className="mb-3">
-                  <Col md={6}>
+                  <Col md={4}>
                     <FormGroup>
                       <Label>{Search}</Label>
                       <Input
@@ -149,7 +202,23 @@ const UsersPage = () => {
                       />
                     </FormGroup>
                   </Col>
-                  <Col md={6} className="d-flex align-items-end">
+                  <Col md={4}>
+                    <FormGroup>
+                      <Label>Filter by Company</Label>
+                      <select 
+                        className="form-control"
+                        onChange={(e) => {
+                          if (e.target.value === 'without-company') {
+                            window.location.href = '/admin/users/without-company';
+                          }
+                        }}
+                      >
+                        <option value="">All Users</option>
+                        <option value="without-company">Users Without Company</option>
+                      </select>
+                    </FormGroup>
+                  </Col>
+                  <Col md={4} className="d-flex align-items-end">
                     <div className="text-muted">
                       {filteredUsers.length} of {users.length} users
                     </div>
@@ -216,7 +285,7 @@ const UsersPage = () => {
                               </div>
                             </td>
                             <td>{user.email}</td>
-                            <td>{user.company || '-'}</td>
+                            <td>{user.company?.name || '-'}</td>
                             <td>{user.role || '-'}</td>
                             <td>{user.phone || '-'}</td>
                             <td>

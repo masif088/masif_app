@@ -7,7 +7,7 @@ export interface CreateUserData {
   first_name: string;
   last_name: string;
   username?: string;
-  company?: string;
+  company_id?: number | null;
   role?: string;
   phone?: string;
   address?: string;
@@ -25,7 +25,7 @@ export interface UpdateUserData {
   last_name?: string;
   email?: string;
   username?: string;
-  company?: string;
+  company_id?: number | null;
   role?: string;
   phone?: string;
   address?: string;
@@ -50,7 +50,30 @@ export class UserService {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Fetch company names for users with company_id
+      const usersWithCompanies = await Promise.all(
+        (data || []).map(async (user) => {
+          if (user.company_id) {
+            const { data: companyData } = await this.supabase
+              .from('companies')
+              .select('name')
+              .eq('id', user.company_id)
+              .single();
+            
+            return {
+              ...user,
+              company: companyData ? { name: companyData.name } : null
+            };
+          }
+          return {
+            ...user,
+            company: null
+          };
+        })
+      );
+
+      return usersWithCompanies;
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
@@ -67,7 +90,25 @@ export class UserService {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Fetch company name if user has company_id
+      if (data && data.company_id) {
+        const { data: companyData } = await this.supabase
+          .from('companies')
+          .select('name')
+          .eq('id', data.company_id)
+          .single();
+        
+        return {
+          ...data,
+          company: companyData ? { name: companyData.name } : null
+        };
+      }
+      
+      return {
+        ...data,
+        company: null
+      };
     } catch (error) {
       console.error('Error fetching user:', error);
       throw error;
@@ -146,11 +187,34 @@ export class UserService {
       const { data, error } = await this.supabase
         .from('users')
         .select('*')
-        .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,role.ilike.%${searchTerm}%`)
+        .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,role.ilike.%${searchTerm}%`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Fetch company names for users with company_id
+      const usersWithCompanies = await Promise.all(
+        (data || []).map(async (user) => {
+          if (user.company_id) {
+            const { data: companyData } = await this.supabase
+              .from('companies')
+              .select('name')
+              .eq('id', user.company_id)
+              .single();
+            
+            return {
+              ...user,
+              company: companyData ? { name: companyData.name } : null
+            };
+          }
+          return {
+            ...user,
+            company: null
+          };
+        })
+      );
+
+      return usersWithCompanies;
     } catch (error) {
       console.error('Error searching users:', error);
       throw error;
@@ -175,18 +239,40 @@ export class UserService {
   }
 
   // Get users by company
-  static async getUsersByCompany(company: string): Promise<ProfileData[]> {
+  static async getUsersByCompany(companyId: number): Promise<ProfileData[]> {
     try {
       const { data, error } = await this.supabase
         .from('users')
         .select('*')
-        .eq('company', company)
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
     } catch (error) {
       console.error('Error fetching users by company:', error);
+      throw error;
+    }
+  }
+
+  // Get users without company
+  static async getUsersWithoutCompany(): Promise<ProfileData[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .is('company_id', null)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Return users with null company
+      return (data || []).map(user => ({
+        ...user,
+        company: null
+      }));
+    } catch (error) {
+      console.error('Error fetching users without company:', error);
       throw error;
     }
   }
@@ -221,30 +307,49 @@ export class UserService {
   // Get user statistics
   static async getUserStats(): Promise<{
     total: number;
+    withoutCompany: number;
     byRole: Record<string, number>;
     byCompany: Record<string, number>;
   }> {
     try {
       const { data, error } = await this.supabase
         .from('users')
-        .select('role, company');
+        .select('role, company_id');
 
       if (error) throw error;
 
       const total = data?.length || 0;
+      const withoutCompany = data?.filter(user => !user.company_id).length || 0;
       const byRole: Record<string, number> = {};
       const byCompany: Record<string, number> = {};
+
+      // Get unique company IDs
+      const companyIds = Array.from(new Set(data?.filter(user => user.company_id).map(user => user.company_id) || []));
+      
+      // Fetch company names
+      let companyNames: Record<number, string> = {};
+      if (companyIds.length > 0) {
+        const { data: companiesData } = await this.supabase
+          .from('companies')
+          .select('id, name')
+          .in('id', companyIds);
+        
+        companyNames = (companiesData || []).reduce((acc, company) => {
+          acc[company.id] = company.name;
+          return acc;
+        }, {} as Record<number, string>);
+      }
 
       data?.forEach(user => {
         if (user.role) {
           byRole[user.role] = (byRole[user.role] || 0) + 1;
         }
-        if (user.company) {
-          byCompany[user.company] = (byCompany[user.company] || 0) + 1;
+        if (user.company_id && companyNames[user.company_id]) {
+          byCompany[companyNames[user.company_id]] = (byCompany[companyNames[user.company_id]] || 0) + 1;
         }
       });
 
-      return { total, byRole, byCompany };
+      return { total, withoutCompany, byRole, byCompany };
     } catch (error) {
       console.error('Error fetching user stats:', error);
       throw error;

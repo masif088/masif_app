@@ -15,29 +15,15 @@ export class CompanyService {
     try {
       const { data, error } = await this.supabase
         .from('companies')
-        .select(`
-          *,
-          leader:users!leader_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            avatar,
-            role
-          ),
-          members:users!company_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            role,
-            avatar,
-            company_id
-          )
-        `)
-        .order('created_at', { ascending: false });
+        .select('*, leader:users!leader_id(id, first_name, last_name, email, avatar, role)')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching companies:', error);
+        throw error;
+      }
+      
       return data || [];
     } catch (error) {
       console.error('Error fetching companies:', error);

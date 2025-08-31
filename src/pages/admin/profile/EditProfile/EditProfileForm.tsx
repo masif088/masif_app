@@ -73,8 +73,9 @@ const EditProfileForm = () => {
                 <Input 
                   type="text" 
                   placeholder="Company" 
-                  value={formData.company || profile?.company || ""}
+                  value={formData.company?.name || profile?.company?.name || ""}
                   onChange={(e) => handleInputChange('company', e.target.value)}
+                  disabled
                 />
               </FormGroup>
             </Col>

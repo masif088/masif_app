@@ -13,6 +13,7 @@ import { CustomizerProvider } from "helper/Customizer/CustomizerProvider";
 import TodoListProvider from "helper/TodoList/TodoListProvider";
 import ContactProvider from "helper/Contacts/ContactProvider";
 import NoSsr from "utils/NoSsr";
+import { AuthProvider } from "../contexts/AuthContext";
 import { registerLicense } from '@syncfusion/ej2-base';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
@@ -63,26 +64,28 @@ const Myapp = ({ Component, pageProps }: any) => {
   registerLicense('ORg4AjUWIQA/Gnt3VVhhQlJDfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTH5VdE1hWXxfcHBcQWZfWkd2')
   return (
     <NoSsr>
-      {withoutLayoutThemePath.includes(updatedPath) ? (
-        <Component {...pageProps} />
-      ) : (
-        <CustomizerProvider>
-          <TodoListProvider>
-            <ProjectProvider>
-              <LayoutProvider>
-                <TaskProvider>
-                  <BookmarkProvider>
-                    <ContactProvider>
-                      {getLayout(<Component {...pageProps} />)}
-                    </ContactProvider>
-                  </BookmarkProvider>
-                </TaskProvider>
-              </LayoutProvider>
-            </ProjectProvider>
-          </TodoListProvider>
-        </CustomizerProvider>
-      )}
-      <ToastContainer />
+      <AuthProvider>
+        {withoutLayoutThemePath.includes(updatedPath) ? (
+          <Component {...pageProps} />
+        ) : (
+          <CustomizerProvider>
+            <TodoListProvider>
+              <ProjectProvider>
+                <LayoutProvider>
+                  <TaskProvider>
+                    <BookmarkProvider>
+                      <ContactProvider>
+                        {getLayout(<Component {...pageProps} />)}
+                      </ContactProvider>
+                    </BookmarkProvider>
+                  </TaskProvider>
+                </LayoutProvider>
+              </ProjectProvider>
+            </TodoListProvider>
+          </CustomizerProvider>
+        )}
+        <ToastContainer />
+      </AuthProvider>
     </NoSsr>
   );
 };

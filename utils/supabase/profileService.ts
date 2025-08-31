@@ -7,7 +7,10 @@ export interface ProfileData {
     last_name: string;
     email: string;
     username?: string;
-    company?: string;
+    company_id?: number | null;
+    company?: {
+        name: string;
+    };
     address?: string;
     city?: string;
     postal_code?: string;

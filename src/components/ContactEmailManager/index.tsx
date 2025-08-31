@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Badge, Row, Col } from 'reactstrap';
 import { ActivityService } from 'utils/supabase/activityService';
-import { ContactEmail, CreateContactEmailData } from 'Types/ActivityType';
+import { ContactEmail, CreateContactEmailData, ContactEmailCategory } from 'Types/ActivityType';
 import { toast } from 'react-toastify';
 
 interface ContactEmailManagerProps {
@@ -11,6 +11,7 @@ interface ContactEmailManagerProps {
 
 const ContactEmailManager: React.FC<ContactEmailManagerProps> = ({ onSelectContact, selectedEmails = [] }) => {
     const [contacts, setContacts] = useState<ContactEmail[]>([]);
+    const [categories, setCategories] = useState<ContactEmailCategory[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingContact, setEditingContact] = useState<ContactEmail | null>(null);
@@ -24,6 +25,7 @@ const ContactEmailManager: React.FC<ContactEmailManagerProps> = ({ onSelectConta
 
     useEffect(() => {
         fetchContacts();
+        fetchCategories();
     }, []);
 
     const fetchContacts = async () => {
@@ -33,6 +35,18 @@ const ContactEmailManager: React.FC<ContactEmailManagerProps> = ({ onSelectConta
         } catch (error) {
             console.error('Error fetching contacts:', error);
             toast.error('Failed to load contacts');
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            // Initialize default categories if none exist
+            await ActivityService.initializeDefaultCategories();
+            const data = await ActivityService.getContactEmailCategories();
+            setCategories(data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            toast.error('Failed to load categories');
         }
     };
 
@@ -105,7 +119,7 @@ const ContactEmailManager: React.FC<ContactEmailManagerProps> = ({ onSelectConta
 
     const isEmailSelected = (email: string) => selectedEmails.includes(email);
 
-    const categories = ['General', 'Work', 'Personal', 'Family', 'Friends', 'Business'];
+
 
     return (
         <div>
@@ -213,7 +227,7 @@ const ContactEmailManager: React.FC<ContactEmailManagerProps> = ({ onSelectConta
                                 onChange={(e) => setNewContact(prev => ({...prev, category: e.target.value}))}
                             >
                                 {categories.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
                                 ))}
                             </Input>
                         </FormGroup>
@@ -274,7 +288,7 @@ const ContactEmailManager: React.FC<ContactEmailManagerProps> = ({ onSelectConta
                                     onChange={(e) => setEditingContact(prev => prev ? {...prev, category: e.target.value} : null)}
                                 >
                                     {categories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
+                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
                                     ))}
                                 </Input>
                             </FormGroup>

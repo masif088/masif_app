@@ -1,19 +1,40 @@
 import Breadcrumbs from "CommonElements/Breadcrumbs";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Col, Container, Row, Card, CardBody, CardHeader, Button, Form, FormGroup, Label, Input, Alert } from "reactstrap";
 import { ActivityService } from "utils/supabase/activityService";
-import { CreateContactEmailData } from "Types/ActivityType";
+import { CreateContactEmailData, ContactEmailCategory } from "Types/ActivityType";
 import { toast } from "react-toastify";
 
 const ImportContactsPage = () => {
     const [importData, setImportData] = useState('');
     const [category, setCategory] = useState('General');
+    const [categories, setCategories] = useState<ContactEmailCategory[]>([]);
     const [isImporting, setIsImporting] = useState(false);
     const [importResults, setImportResults] = useState<{
         success: number;
         failed: number;
         errors: string[];
     }>({ success: 0, failed: 0, errors: [] });
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const fetchCategories = async () => {
+        try {
+            // Initialize default categories if none exist
+            await ActivityService.initializeDefaultCategories();
+            const data = await ActivityService.getContactEmailCategories();
+            setCategories(data);
+            // Set the first category as default if available
+            if (data.length > 0) {
+                setCategory(data[0].name);
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            toast.error('Failed to load categories');
+        }
+    };
 
     const handleImport = async () => {
         if (!importData.trim()) {
@@ -87,7 +108,7 @@ const ImportContactsPage = () => {
         reader.readAsText(file);
     };
 
-    const categories = ['General', 'Work', 'Personal', 'Family', 'Friends', 'Business'];
+
 
     return (
         <div className="page-body">
@@ -121,7 +142,7 @@ const ImportContactsPage = () => {
                                             onChange={(e) => setCategory(e.target.value)}
                                         >
                                             {categories.map(cat => (
-                                                <option key={cat} value={cat}>{cat}</option>
+                                                <option key={cat.id} value={cat.name}>{cat.name}</option>
                                             ))}
                                         </Input>
                                     </FormGroup>

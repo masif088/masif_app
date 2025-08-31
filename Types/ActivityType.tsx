@@ -97,6 +97,22 @@ export interface ContactEmail {
     updated_at?: string;
 }
 
+export interface ContactEmailCategory {
+    id?: number;
+    user_id: string;
+    name: string;
+    color: string;
+    is_default: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateContactEmailCategoryData {
+    name: string;
+    color?: string;
+    is_default?: boolean;
+}
+
 export interface CreateContactEmailData {
     name: string;
     email: string;

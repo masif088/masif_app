@@ -54,7 +54,7 @@ export default async function handler(
         last_name: userData.last_name,
         email: userData.email,
         username: userData.username,
-        company: userData.company,
+        company_id: userData.company_id || null,
         role: userData.role,
         phone: userData.phone,
         address: userData.address,

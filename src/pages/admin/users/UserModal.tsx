@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Row, Col, FormGroup, Label, Input } from 'reactstrap';
 import { ProfileData } from 'utils/supabase/profileService';
 
-// Extend ProfileData to include company_id
-interface ExtendedProfileData extends Omit<ProfileData, 'company'> {
-  company_id?: string;
+// Use ProfileData directly since it now includes company_id
+interface ExtendedProfileData extends ProfileData {
+  company_id?: number | null;
 }
 import { createClient } from 'utils/supabase/client';
 import { CompanyService } from 'utils/supabase/companyService';
@@ -12,6 +12,7 @@ import { Company } from 'Types/CompanyType';
 import { toast } from 'react-toastify';
 import SkillsInput from '../profile/EditProfile/SkillsInput';
 import Image from 'next/image';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface UserModalProps {
 }
 
 const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSaved }) => {
+  const { session } = useAuth();
   const [formData, setFormData] = useState<Partial<ExtendedProfileData>>({});
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
@@ -33,25 +35,25 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
 
   const supabase = createClient();
 
-  // Load companies when modal opens
-  useEffect(() => {
-    if (isOpen && mode !== 'view') {
-      loadCompanies();
-    }
-  }, [isOpen, mode]);
-
-  const loadCompanies = async () => {
+  const loadCompanies = useCallback(async () => {
     try {
       setLoadingCompanies(true);
       const companiesData = await CompanyService.getAllCompanies();
-      setCompanies(companiesData);
+      setCompanies(companiesData || []);
     } catch (error) {
       console.error('Error loading companies:', error);
       toast.error('Failed to load companies');
     } finally {
       setLoadingCompanies(false);
     }
-  };
+  }, []);
+
+  // Load companies when modal opens
+  useEffect(() => {
+    if (isOpen && mode !== 'view' && session) {
+      loadCompanies();
+    }
+  }, [isOpen, mode, loadCompanies, session]);
 
   useEffect(() => {
     if (user && mode !== 'create') {
@@ -60,7 +62,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
         last_name: user.last_name || '',
         email: user.email || '',
         username: user.username || '',
-        company_id: (user as any).company_id || '',
+        company_id: user.company_id || null,
         role: user.role || '',
         phone: user.phone || '',
         address: user.address || '',
@@ -84,7 +86,14 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
 
   const handleInputChange = (field: keyof ExtendedProfileData, value: string) => {
     if (mode === 'view') return; // Read-only in view mode
-    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Handle company_id specifically to allow null values
+    if (field === 'company_id') {
+      const companyId = value === '' ? null : parseInt(value);
+      setFormData(prev => ({ ...prev, [field]: companyId }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,7 +164,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
 
       const userData = {
         ...formData,
-        avatar: avatarUrl
+        avatar: avatarUrl,
+        company_id: formData.company_id || null
       };
 
       if (mode === 'create') {
@@ -340,18 +350,26 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, toggle, user, mode, onSav
                 <Label>Company</Label>
                 <Input
                   type="select"
-                  value={formData.company_id || ''}
+                  value={formData.company_id?.toString() || ''}
                   onChange={(e) => handleInputChange('company_id', e.target.value)}
                   disabled={isReadOnly || loadingCompanies}
                 >
-                  <option value="">Select Company</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
+                  <option value="">Select Company (Optional)</option>
+                  {companies.length > 0 ? (
+                    companies.map((company) => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No companies available</option>
+                  )}
                 </Input>
                 {loadingCompanies && <small className="text-muted">Loading companies...</small>}
+                {!loadingCompanies && companies.length === 0 && (
+                  <small className="text-muted">No companies found. Please create companies first.</small>
+                )}
+                <small className="text-muted">Companies count: {companies.length}</small>
               </FormGroup>
             </Col>
             <Col md={6}>

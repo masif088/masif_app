@@ -1,5 +1,5 @@
 import { createClient } from './client';
-import { Activity, User, ActivityPriority, CreateActivityPriorityData, CreateActivityFormData, ActivityFilters, ActivityStatus, CreateActivityStatusData, ActivityType, CreateActivityTypeData, ActivityNote, EmailData, ContactEmail, CreateContactEmailData } from '../../Types/ActivityType';
+import { Activity, User, ActivityPriority, CreateActivityPriorityData, CreateActivityFormData, ActivityFilters, ActivityStatus, CreateActivityStatusData, ActivityType, CreateActivityTypeData, ActivityNote, EmailData, ContactEmail, CreateContactEmailData, ContactEmailCategory, CreateContactEmailCategoryData } from '../../Types/ActivityType';
 import { log } from 'console';
 import Cookies from 'js-cookie';
 import { EmailMessage } from 'utils/imapService';
@@ -715,6 +715,94 @@ export class ActivityService {
             if (error) throw error;
         } catch (error) {
             console.error('Error toggling favorite:', error);
+            throw error;
+        }
+    }
+
+    // Contact Email Categories Methods
+    static async getContactEmailCategories(): Promise<ContactEmailCategory[]> {
+        try {
+            const user_id = JSON.parse(Cookies.get('user') || '{}').id;
+            const { data, error } = await this.supabase
+                .from('contact_email_categories')
+                .select('*')
+                .eq('user_id', user_id)
+                .order('is_default', { ascending: false })
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching contact email categories:', error);
+            throw error;
+        }
+    }
+
+    static async createContactEmailCategory(categoryData: CreateContactEmailCategoryData): Promise<ContactEmailCategory | null> {
+        try {
+            const user_id = JSON.parse(Cookies.get('user') || '{}').id;
+            const dataToInsert = {
+                ...categoryData,
+                user_id,
+                color: categoryData.color || 'primary',
+                is_default: categoryData.is_default || false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await this.supabase
+                .from('contact_email_categories')
+                .insert([dataToInsert])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating contact email category:', error);
+            throw error;
+        }
+    }
+
+    static async initializeDefaultCategories(): Promise<void> {
+        try {
+            const user_id = JSON.parse(Cookies.get('user') || '{}').id;
+            
+            // Check if user already has categories
+            const { data: existingCategories, error: checkError } = await this.supabase
+                .from('contact_email_categories')
+                .select('id')
+                .eq('user_id', user_id)
+                .limit(1);
+
+            if (checkError) throw checkError;
+
+            // If user has no categories, create default ones
+            if (!existingCategories || existingCategories.length === 0) {
+                const defaultCategories = [
+                    { name: 'General', color: 'primary', is_default: true },
+                    { name: 'Work', color: 'info', is_default: false },
+                    { name: 'Personal', color: 'success', is_default: false },
+                    { name: 'Family', color: 'warning', is_default: false },
+                    { name: 'Friends', color: 'secondary', is_default: false },
+                    { name: 'Business', color: 'danger', is_default: false }
+                ];
+
+                const categoriesToInsert = defaultCategories.map(cat => ({
+                    ...cat,
+                    user_id,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }));
+
+                const { error: insertError } = await this.supabase
+                    .from('contact_email_categories')
+                    .insert(categoriesToInsert);
+
+                if (insertError) throw insertError;
+            }
+        } catch (error) {
+            console.error('Error initializing default categories:', error);
             throw error;
         }
     }

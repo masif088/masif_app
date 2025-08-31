@@ -149,7 +149,9 @@ const UserDetailPage = () => {
                 <h4>{user.first_name} {user.last_name}</h4>
                 <p className="text-muted">{user.username}</p>
                 <Badge color="primary" className="mb-2">{user.role || 'No Role'}</Badge>
-                <p className="text-muted mb-0">{user.company || 'No Company'}</p>
+                <p className="text-muted mb-0">
+                  {user.company?.name || 'No Company'}
+                </p>
               </CardBody>
             </Card>
           </Col>

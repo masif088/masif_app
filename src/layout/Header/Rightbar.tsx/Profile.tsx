@@ -7,22 +7,89 @@ import { profileListData } from "Data/HeaderData";
 import { Logout } from "../../../../utils/Constant/index";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
+import { useAuth } from "../../../contexts/AuthContext";
+import { toast } from "react-toastify";
 
 const Profile = () => {
   const router = useRouter();
+  const { signOut, user } = useAuth();
+  const [userData, setUserData] = useState<any>(null);
 
-  const handleLogOut = () => {
-    Cookies.remove('token')
-    router.push("/authentication/login");
+  // Use AuthContext user data as primary source, fallback to cookies
+  useEffect(() => {
+    if (user) {
+      // If we have user from AuthContext, use it
+      setUserData({
+        first_name: user.user_metadata?.first_name || user.email?.split('@')[0] || 'User',
+        last_name: user.user_metadata?.last_name || '',
+        role: user.user_metadata?.role || 'User'
+      });
+    } else {
+      // Fallback to cookies for backward compatibility
+      const userCookie = Cookies.get("user");
+      if (userCookie) {
+        try {
+          const parsedUser = JSON.parse(userCookie);
+          setUserData(parsedUser);
+        } catch (error) {
+          console.error('Error parsing user cookie:', error);
+          setUserData(null);
+        }
+      } else {
+        setUserData(null);
+      }
+    }
+  }, [user]);
+
+  const handleLogOut = async () => {
+    try {
+      console.log('Starting logout process...');
+      
+      // Show loading toast
+      const loadingToast = toast.loading("Logging out...");
+      
+      // Remove all authentication-related cookies
+      console.log('Removing cookies...');
+      Cookies.remove('token');
+      Cookies.remove('user');
+      
+      // Clear any localStorage items
+      if (typeof window !== 'undefined') {
+        console.log('Clearing localStorage...');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+      
+      // Use Supabase signOut to properly clear the session
+      console.log('Calling Supabase signOut...');
+      await signOut();
+      
+      console.log('Logout completed successfully');
+      
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast);
+      toast.success("Logged out successfully");
+      
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast.error("Error during logout. Please try again.");
+      
+      // Fallback: force redirect to login page and clear everything
+      console.log('Executing fallback logout...');
+      Cookies.remove('token');
+      Cookies.remove('user');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+      router.push("/authentication/login");
+    }
   };
 
-  const [userData, setUserData] = useState<any>(null);
-  useEffect(() => {
-    const user = Cookies.get("user");
-    const userData = JSON.parse(user || "{}");
-    console.log(userData.first_name);
-    setUserData(userData);
-  }, []);
+  // Don't render if no user data
+  if (!userData) {
+    return null;
+  }
 
   
   return (

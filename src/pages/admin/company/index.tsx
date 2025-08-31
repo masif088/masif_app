@@ -98,7 +98,7 @@ const CompanyManagement = () => {
       const [companiesData, statsData, usersData] = await Promise.all([
         CompanyService.getAllCompanies(),
         CompanyService.getCompanyStats(),
-        UserService.getAllUsers(),
+        UserService.getUsersWithoutCompany(),
       ]);
 
       setCompanies(companiesData);

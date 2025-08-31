@@ -94,7 +94,7 @@ const EditMyProfile = () => {
               </div>
               <Col> 
                 <h5 className="mb-1">{profile?.first_name || ""} {profile?.last_name || ""}</h5> 
-                <p className="mb-4">{profile?.role || profile?.company || ""}</p>
+                <p className="mb-4">{profile?.role || profile?.company?.name || ""}</p>
               </Col>
             </Row>
             <FormGroup>

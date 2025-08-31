@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 
 interface UserStats {
   total: number;
+  withoutCompany: number;
   byRole: Record<string, number>;
   byCompany: Record<string, number>;
 }
@@ -61,7 +62,7 @@ const UserStats: React.FC = () => {
   return (
     <Row>
       {/* Total Users */}
-      <Col md={3}>
+      <Col md={2}>
         <Card className="bg-primary text-white">
           <CardBody>
             <div className="d-flex justify-content-between align-items-center">
@@ -77,14 +78,31 @@ const UserStats: React.FC = () => {
         </Card>
       </Col>
 
+      {/* Users Without Company */}
+      <Col md={2}>
+        <Card className="bg-warning text-white">
+          <CardBody>
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h4 className="mb-0">{stats.withoutCompany}</h4>
+                <p className="mb-0">Without Company</p>
+              </div>
+              <div>
+                <i className="fa fa-user-times fa-2x"></i>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      </Col>
+
       {/* Active Users */}
-      <Col md={3}>
+      <Col md={2}>
         <Card className="bg-success text-white">
           <CardBody>
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <h4 className="mb-0">{stats.total}</h4>
-                <p className="mb-0">Active Users</p>
+                <h4 className="mb-0">{stats.total - stats.withoutCompany}</h4>
+                <p className="mb-0">With Company</p>
               </div>
               <div>
                 <i className="fa fa-user-check fa-2x"></i>
@@ -95,7 +113,7 @@ const UserStats: React.FC = () => {
       </Col>
 
       {/* Roles Count */}
-      <Col md={3}>
+      <Col md={2}>
         <Card className="bg-info text-white">
           <CardBody>
             <div className="d-flex justify-content-between align-items-center">
@@ -112,8 +130,8 @@ const UserStats: React.FC = () => {
       </Col>
 
       {/* Companies Count */}
-      <Col md={3}>
-        <Card className="bg-warning text-white">
+      <Col md={2}>
+        <Card className="bg-secondary text-white">
           <CardBody>
             <div className="d-flex justify-content-between align-items-center">
               <div>

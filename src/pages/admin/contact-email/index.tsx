@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Col, Container, Row, Card, CardBody, CardHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, Badge } from "reactstrap";
 import { useRouter } from "next/router";
 import { ActivityService } from 'utils/supabase/activityService';
-import { ContactEmail, CreateContactEmailData } from 'Types/ActivityType';
+import { ContactEmail, CreateContactEmailData, ContactEmailCategory } from 'Types/ActivityType';
 import { toast } from 'react-toastify';
 
 const ContactEmailPage = () => {
@@ -11,6 +11,7 @@ const ContactEmailPage = () => {
     
     // ContactEmailManager state moved inline
     const [contacts, setContacts] = useState<ContactEmail[]>([]);
+    const [categories, setCategories] = useState<ContactEmailCategory[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingContact, setEditingContact] = useState<ContactEmail | null>(null);
@@ -24,6 +25,7 @@ const ContactEmailPage = () => {
 
     useEffect(() => {
         fetchContacts();
+        fetchCategories();
     }, []);
 
     // ContactEmailManager functions moved inline
@@ -34,6 +36,18 @@ const ContactEmailPage = () => {
         } catch (error) {
             console.error('Error fetching contacts:', error);
             toast.error('Failed to load contacts');
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            // Initialize default categories if none exist
+            await ActivityService.initializeDefaultCategories();
+            const data = await ActivityService.getContactEmailCategories();
+            setCategories(data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            toast.error('Failed to load categories');
         }
     };
 
@@ -119,7 +133,7 @@ const ContactEmailPage = () => {
         router.push('/admin/contact-email/dashboard');
     };
 
-    const categories = ['General', 'Work', 'Personal', 'Family', 'Friends', 'Business'];
+
 
     return (
         <div className="page-body">
@@ -272,7 +286,7 @@ const ContactEmailPage = () => {
                                 onChange={(e) => setNewContact(prev => ({...prev, category: e.target.value}))}
                             >
                                 {categories.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
                                 ))}
                             </Input>
                         </FormGroup>
@@ -333,7 +347,7 @@ const ContactEmailPage = () => {
                                     onChange={(e) => setEditingContact(prev => prev ? {...prev, category: e.target.value} : null)}
                                 >
                                     {categories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
+                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
                                     ))}
                                 </Input>
                             </FormGroup>
