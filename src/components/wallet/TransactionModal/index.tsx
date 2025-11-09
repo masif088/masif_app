@@ -20,6 +20,7 @@ interface TransactionModalProps {
   isOpen: boolean;
   toggle: () => void;
   selectedWallet?: Wallet | null;
+  transaction?: Transaction | null;
   onSuccess: () => void;
 }
 
@@ -27,6 +28,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   isOpen, 
   toggle, 
   selectedWallet,
+  transaction,
   onSuccess 
 }) => {
   const [formData, setFormData] = useState<CreateTransactionData>({
@@ -44,22 +46,45 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [selectedWalletData, setSelectedWalletData] = useState<Wallet | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       loadWallets();
       loadUsers();
       loadCategories();
-      if (selectedWallet) {
-        setFormData(prev => ({
-          ...prev,
-          wallet_id: selectedWallet.id
-        }));
-        setSelectedWalletData(selectedWallet);
+      if (transaction) {
+        setIsEditMode(true);
+        setFormData({
+          wallet_id: transaction.wallet_id,
+          user_id: transaction.user_id,
+          type: transaction.type,
+          amount: transaction.amount,
+          description: transaction.description || '',
+          category: transaction.category || '',
+          reference_id: transaction.reference_id || ''
+        });
+        if (transaction.wallet) {
+          setSelectedWalletData(transaction.wallet);
+        }
+      } else {
+        setIsEditMode(false);
+        setFormData({
+          wallet_id: selectedWallet?.id || '',
+          user_id: '',
+          type: 'credit',
+          amount: 0,
+          description: '',
+          category: '',
+          reference_id: ''
+        });
+        if (selectedWallet) {
+          setSelectedWalletData(selectedWallet);
+        }
       }
       setError('');
     }
-  }, [isOpen, selectedWallet]);
+  }, [isOpen, selectedWallet, transaction]);
 
   const loadWallets = async () => {
     try {
@@ -137,12 +162,16 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     setError('');
 
     try {
-      await WalletService.createTransaction(formData);
+      if (isEditMode && transaction) {
+        await WalletService.updateTransaction(transaction.id, formData);
+      } else {
+        await WalletService.createTransaction(formData);
+      }
       onSuccess();
       toggle();
     } catch (error: any) {
-      console.error('Error creating transaction:', error);
-      setError(error.message || 'Failed to create transaction');
+      console.error('Error saving transaction:', error);
+      setError(error.message || 'Failed to save transaction');
     } finally {
       setLoading(false);
     }
@@ -160,6 +189,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     });
     setSelectedWalletData(null);
     setError('');
+    setIsEditMode(false);
     toggle();
   };
 
@@ -184,7 +214,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   return (
     <Modal isOpen={isOpen} toggle={handleCancel} size="lg">
       <ModalHeader toggle={handleCancel}>
-        Create New Transaction
+        {isEditMode ? 'Edit Transaction' : 'Create New Transaction'}
       </ModalHeader>
       <ModalBody>
         {error && (
@@ -334,7 +364,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           onClick={handleSubmit} 
           disabled={loading}
         >
-          {loading ? 'Creating...' : 'Create Transaction'}
+          {loading ? 'Saving...' : (isEditMode ? 'Update Transaction' : 'Create Transaction')}
         </Button>
       </ModalFooter>
     </Modal>

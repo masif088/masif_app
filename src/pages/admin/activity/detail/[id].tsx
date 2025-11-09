@@ -46,17 +46,28 @@ const ActivityDetail = () => {
     const [editNoteContent, setEditNoteContent] = useState("");
     const [fetchingEmails, setFetchingEmails] = useState(false);
     const [testingConnection, setTestingConnection] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
+    const [loadingSupportingData, setLoadingSupportingData] = useState(false);
 
     useEffect(() => {
         if (id) {
+            // Load critical data first
             fetchActivityDetail();
             fetchActivityNotes();
-            fetchUsers();
-            fetchCompanies();
-            fetchStatuses();
-            fetchPriorities();
+            
+            // Load supporting data in parallel
+            setLoadingSupportingData(true);
+            Promise.all([
+                fetchUsers(),
+                fetchCompanies(),
+                fetchStatuses(),
+                fetchPriorities()
+            ]).catch(error => {
+                console.error("Error loading supporting data:", error);
+            }).finally(() => {
+                setLoadingSupportingData(false);
+            });
         }
-
     }, [id]);
 
     
@@ -151,6 +162,11 @@ const ActivityDetail = () => {
             await ActivityService.createActivityNote({
                 activity_id: activity.id!, user_id: user.id, content: newNote, is_internal: isInternalNote, email: null, email_uid: null,
             });
+
+            // If it's a public note and activity has a company, send email notification
+            if (!isInternalNote && activity.company_id) {
+                await sendPublicNoteEmailNotification(activity, newNote, user);
+            }
 
             fetchActivityNotes();
             setNewNote("");
@@ -266,13 +282,21 @@ const ActivityDetail = () => {
     const handleSendEmail = async () => {
         if (!emailData.to.length || !emailData.subject || !emailData.body || !activity) return;
 
-        // Add activity reference to email body
-      
+        setSendingEmail(true);
+        
         try {
+            console.log("Starting email send process...", { 
+                to: emailData.to, 
+                subject: emailData.subject, 
+                activityId: activity.id 
+            });
+
             // Send the email
-            await ActivityService.sendActivityEmail({
+            const emailResult = await ActivityService.sendActivityEmail({
                 ...emailData, activity_id: activity.id!,
             });
+
+            console.log("Email sent successfully:", emailResult);
 
             // Create a note with the email content
             const user = JSON.parse(Cookies.get("user") || "{}");
@@ -288,6 +312,7 @@ const ActivityDetail = () => {
                 </div>
             `;
 
+            console.log("Creating activity note...");
             await ActivityService.createActivityNote({
                 activity_id: activity.id!,
                 user_id: user.id,
@@ -296,6 +321,8 @@ const ActivityDetail = () => {
                 email: null,
                 email_uid: null,
             });
+
+            console.log("Activity note created successfully");
 
             // Refresh the notes to show the new email note
             fetchActivityNotes();
@@ -306,8 +333,18 @@ const ActivityDetail = () => {
             });
             toast.success("Email sent and saved as note");
         } catch (error) {
-            console.error("Error sending email:", error);
-            toast.error("Failed to send email");
+            console.error("Error in email sending process:", error);
+            
+            // More specific error messages
+            if (error.message?.includes('Failed to send email')) {
+                toast.error("Failed to send email: " + error.message);
+            } else if (error.message?.includes('Failed to create note')) {
+                toast.error("Email sent but failed to save note: " + error.message);
+            } else {
+                toast.error("Failed to send email: " + (error.message || "Unknown error"));
+            }
+        } finally {
+            setSendingEmail(false);
         }
     };
 
@@ -798,7 +835,20 @@ const ActivityDetail = () => {
                 size: "lg"
             }}
         >
-            <div className="email-modal-content">
+            {sendingEmail && (
+                <div className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" 
+                     style={{top: 0, left: 0, backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 1000}}>
+                    <div className="text-center">
+                        <div className="spinner-border text-primary mb-3" role="status">
+                            <span className="sr-only">Sending email...</span>
+                        </div>
+                        <h6 className="text-muted">Sending email...</h6>
+                        <p className="text-muted small">Please wait while we send your email</p>
+                    </div>
+                </div>
+            )}
+            
+            <div className="email-modal-content" style={{position: 'relative'}}>
                 <div className="row">
                     <div className="col-md-6">
                         <label className="form-label">To:</label>
@@ -941,15 +991,26 @@ const ActivityDetail = () => {
                 <Button
                     color="secondary"
                     onClick={() => setShowEmailModal(false)}
+                    disabled={sendingEmail}
                 >
                     Cancel
                 </Button>
                 <Button
                     color="primary"
                     onClick={handleSendEmail}
-                    disabled={!emailData.to.length || !emailData.subject || !emailData.body}
+                    disabled={!emailData.to.length || !emailData.subject || !emailData.body || sendingEmail}
                 >
-                    Send Email
+                    {sendingEmail ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Sending...
+                        </>
+                    ) : (
+                        <>
+                            <i className="icon-mail me-1"></i>
+                            Send Email
+                        </>
+                    )}
                 </Button>
             </div>
         </CommonModal>

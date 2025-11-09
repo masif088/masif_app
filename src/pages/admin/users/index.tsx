@@ -173,19 +173,27 @@ const UsersPage = () => {
                     <h4 className="card-title mb-0">Users Management</h4>
                   </Col>
                   <Col md={6} className="text-end">
-                    <Link href="/admin/users/without-company" className="btn btn-warning me-2">
-                      <i className="fa fa-users me-1"></i>
-                      Users Without Company
-                    </Link>
-                    <Button 
-                      color="primary" 
-                      outline
-                      size="sm"
-                      onClick={openCreateModal}
-                    >
-                      <i className="icon-plus me-2"></i>
-                      Add User
-                    </Button>
+                    <div className="d-flex gap-2 flex-wrap justify-content-end">
+                      <Link href="/admin/users/without-company">
+                        <Button 
+                          color="warning"
+                          size="sm"
+                          className="d-flex align-items-center"
+                        >
+                          <i className="fa fa-users me-1"></i>
+                          <span className="d-none d-sm-inline">Users Without Company</span>
+                        </Button>
+                      </Link>
+                      <Button 
+                        color="primary" 
+                        size="sm"
+                        onClick={openCreateModal}
+                        className="d-flex align-items-center"
+                      >
+                        <i className="icon-plus me-1"></i>
+                        <span className="d-none d-sm-inline">Add User</span>
+                      </Button>
+                    </div>
                   </Col>
                 </Row>
               </CardHeader>
@@ -289,30 +297,30 @@ const UsersPage = () => {
                             <td>{user.role || '-'}</td>
                             <td>{user.phone || '-'}</td>
                             <td>
-                              <div className="d-flex gap-1 justify-content-start">
+                              <div className="d-flex gap-1 justify-content-center">
                                 <Button
                                   color="outline-info"
                                   size="sm"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                                   onClick={() => openViewModal(user)}
-                                  title="View"
                                 >
-                                  <i className="fa fa-eye"></i>
+                                  View
                                 </Button>
                                 <Button
                                   color="outline-warning"
                                   size="sm"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                                   onClick={() => openEditModal(user)}
-                                  title="Edit"
                                 >
-                                  <i className="fa fa-edit"></i>
+                                  Edit
                                 </Button>
                                 <Button
                                   color="outline-danger"
                                   size="sm"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                                   onClick={() => user.id && handleDeleteUser(user.id)}
-                                  title="Delete"
                                 >
-                                  <i className="fa fa-trash"></i>
+                                  Delete
                                 </Button>
                               </div>
                             </td>

@@ -27,6 +27,7 @@ import '@syncfusion/ej2-layouts/styles/material.css';
 import '@syncfusion/ej2-grids/styles/material.css';
 import '@syncfusion/ej2-gantt/styles/material.css';
 import '@syncfusion/ej2-kanban/styles/material.css';
+import '@syncfusion/ej2-schedule/styles/material.css';
 
 // import '@syncfusion/ej2-base/styles/material.css';  
 // import '@syncfusion/ej2-buttons/styles/material.css';  
@@ -61,7 +62,7 @@ const Myapp = ({ Component, pageProps }: any) => {
 
   // Ngo9BigBOggjHTQxAR8/V1JEaF5cXmRCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXlceHZVRGNfUkBwXEZWYEk=
   //  registerLicense('Ngo9BigBOggjHTQxAR8/V1JEaF5cXmRCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXlceHZVRGNfUkBwXEZWYEk=');
-  registerLicense('ORg4AjUWIQA/Gnt3VVhhQlJDfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTH5VdE1hWXxfcHBcQWZfWkd2')
+  registerLicense(process.env.NEXT_PUBLIC_SYNCFUSION_LICENSE_KEY??'');
   return (
     <NoSsr>
       <AuthProvider>

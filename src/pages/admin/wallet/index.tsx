@@ -46,6 +46,7 @@ const WalletPage = () => {
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
   const [editingWallet, setEditingWallet] = useState<Wallet | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
 
   // Load data on component mount
@@ -123,6 +124,7 @@ const WalletPage = () => {
 
   const handleAddTransaction = (wallet: Wallet) => {
     setSelectedWallet(wallet);
+    setEditingTransaction(null);
     setTransactionModalOpen(true);
   };
 
@@ -132,7 +134,12 @@ const WalletPage = () => {
   };
 
   const handleTransactionModalSuccess = () => {
-    toast.success('Transaction created successfully');
+    if (editingTransaction) {
+      toast.success('Transaction updated successfully');
+    } else {
+      toast.success('Transaction created successfully');
+    }
+    setEditingTransaction(null);
     loadData();
   };
 
@@ -140,6 +147,24 @@ const WalletPage = () => {
   const handleViewTransaction = (transaction: Transaction) => {
     // You can implement a transaction detail modal here
     console.log('View transaction:', transaction);
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setTransactionModalOpen(true);
+  };
+
+  const handleRemoveTransaction = async (transaction: Transaction) => {
+    if (window.confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
+      try {
+        await WalletService.deleteTransaction(transaction.id);
+        toast.success('Transaction deleted successfully');
+        loadData();
+      } catch (error: any) {
+        console.error('Error deleting transaction:', error);
+        toast.error(error.message || 'Failed to delete transaction');
+      }
+    }
   };
 
   const handleExportTransactions = () => {
@@ -281,7 +306,10 @@ const WalletPage = () => {
                     <Button 
                       color="success"
                       size="sm"
-                      onClick={() => setTransactionModalOpen(true)}
+                      onClick={() => {
+                        setEditingTransaction(null);
+                        setTransactionModalOpen(true);
+                      }}
                       className="d-flex align-items-center"
                     >
                       <Plus size={16} className="me-1" />
@@ -375,6 +403,8 @@ const WalletPage = () => {
                       <TransactionTable
                         transactions={filteredTransactions}
                         onViewTransaction={handleViewTransaction}
+                        onEditTransaction={handleEditTransaction}
+                        onRemoveTransaction={handleRemoveTransaction}
                         onExport={handleExportTransactions}
                       />
                     </div>
@@ -396,8 +426,12 @@ const WalletPage = () => {
 
       <TransactionModal
         isOpen={transactionModalOpen}
-        toggle={() => setTransactionModalOpen(false)}
+        toggle={() => {
+          setTransactionModalOpen(false);
+          setEditingTransaction(null);
+        }}
         selectedWallet={selectedWallet}
+        transaction={editingTransaction}
         onSuccess={handleTransactionModalSuccess}
       />
     </div>

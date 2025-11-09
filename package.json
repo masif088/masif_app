@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^38.1.1",
-    "@ckeditor/ckeditor5-react": "^6.1.0",
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-react": "^11.0.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@egjs/react-grid": "^1.15.2",
     "@fullcalendar/core": "^6.1.10",
     "@fullcalendar/daygrid": "^6.1.10",
@@ -27,6 +30,8 @@
     "@syncfusion/ej2-gantt": "^21.2.10",
     "@syncfusion/ej2-react-gantt": "^30.1.37",
     "@syncfusion/ej2-react-kanban": "^30.1.37",
+    "@syncfusion/ej2-react-schedule": "^30.1.37",
+    "@syncfusion/ej2-schedule": "^30.1.37",
     "@types/node": "^20.10.3",
     "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
@@ -98,6 +103,7 @@
     "simplebar": "^6.2.0",
     "slick-carousel": "^1.8.1",
     "styled-components": "^6.0.8",
+    "summernote": "^0.9.1",
     "sweetalert2": "^11.7.3",
     "swiper": "^11.1.1",
     "typescript": "^5.5.0"

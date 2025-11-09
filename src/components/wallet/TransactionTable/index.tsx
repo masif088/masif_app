@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Badge, Button, Input, Row, Col, FormGroup, Label, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Card, CardBody } from 'reactstrap';
 import { Transaction, Wallet } from '../../../../Types/WalletType';
-import { Filter, Download, Eye, Calendar, TrendingUp, TrendingDown, DollarSign } from 'react-feather';
+import { Filter, Download, Eye, Calendar, TrendingUp, TrendingDown, DollarSign, Edit, Trash2 } from 'react-feather';
 import { WalletService } from 'utils/supabase/walletService';
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onViewTransaction: (transaction: Transaction) => void;
+  onEditTransaction?: (transaction: Transaction) => void;
+  onRemoveTransaction?: (transaction: Transaction) => void;
   onExport?: () => void;
 }
 
 const TransactionTable: React.FC<TransactionTableProps> = ({ 
   transactions, 
   onViewTransaction,
+  onEditTransaction,
+  onRemoveTransaction,
   onExport 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -404,7 +408,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <th>Type</th>
               <th>Status</th>
               <th>Reference</th>
-              <th>Actions</th>
+              <th style={{textAlign: 'center'}}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -463,14 +467,55 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     <small className="text-muted">{transaction.reference_id}</small>
                   )}
                 </td>
-                <td>
-                  <Button
-                    color="outline-primary"
-                    size="sm"
-                    onClick={() => onViewTransaction(transaction)}
-                  >
-                    <Eye size={12} />
-                  </Button>
+                <td style={{textAlign: 'center'}}>
+                  <div className="d-flex gap-1 justify-content-center">
+                    <Button
+                      color="outline-primary"
+                      size="sm"
+                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof onViewTransaction === "function") {
+                          onViewTransaction(transaction);
+                        }
+                      }}
+                    >
+                      View
+                    </Button>
+                    {onEditTransaction && (
+                      <Button
+                        color="outline-warning"
+                        size="sm"
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (typeof onEditTransaction === "function") {
+                            onEditTransaction(transaction);
+                          }
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                    {onRemoveTransaction && (
+                      <Button
+                        color="outline-danger"
+                        size="sm"
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (typeof onRemoveTransaction === "function") {
+                            onRemoveTransaction(transaction);
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

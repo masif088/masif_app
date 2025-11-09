@@ -586,23 +586,7 @@ export class ActivityService {
                 throw new Error(errorData.message || 'Failed to send email');
             }
             
-            const user_id = JSON.parse(Cookies.get('user') || '{}').id;
-            // Store email record in database
-            const { error } = await this.supabase
-                .from('activity_emails')
-                .insert([{
-                    activity_id: emailData.activity_id,
-                    user_id: user_id,
-                    to_emails: emailData.to,
-                    cc_emails: emailData.cc || [],
-                    bcc_emails: emailData.bcc || [],
-                    subject: emailData.subject,
-                    body: emailData.body,
-                    status: 'sent'
-                }]);
-
-            if (error) throw error;
-            
+            // Email sent successfully - database logging is handled by the API route
             return true;
         } catch (error) {
             console.error('Error sending email:'+Cookies.get('user_id'), error);

@@ -267,6 +267,42 @@ export class WalletService {
     }
   }
 
+  // Update transaction
+  static async updateTransaction(transactionId: string, updateData: Partial<CreateTransactionData>): Promise<Transaction | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from(this.transactionTableName)
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', transactionId)
+        .select('*, wallet:wallets(*), user:users(*)')
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      throw error;
+    }
+  }
+
+  // Delete transaction
+  static async deleteTransaction(transactionId: string): Promise<void> {
+    try {
+      const { error } = await this.supabase
+        .from(this.transactionTableName)
+        .delete()
+        .eq('id', transactionId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      throw error;
+    }
+  }
+
   // Get transaction categories
   static async getTransactionCategories(): Promise<string[]> {
     // This could be fetched from a categories table or returned as static data

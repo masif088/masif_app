@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 
-// Dynamically import the entire editor component to avoid SSR issues
-const CustomEditorComponent = dynamic(() => import('./EditorComponent'), {
+// Dynamically import CKEditor to avoid SSR issues
+const CKEditorComponent = dynamic(() => import('./CKEditorComponent'), {
     ssr: false,
-    loading: () => <div className="border rounded p-3 bg-light">Loading editor...</div>
+    loading: () => (
+        <div className="border rounded p-3 bg-light d-flex align-items-center justify-content-center" style={{ minHeight: '200px' }}>
+            <div className="text-center">
+                <div className="spinner-border text-primary mb-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <div className="text-muted">Loading CKEditor...</div>
+            </div>
+        </div>
+    )
 });
 
 interface propsTypes {
@@ -21,10 +30,25 @@ const CustomEditor = ({ setEdit, getEdit, clearEditor }: propsTypes) => {
     }, []);
 
     if (!isClient) {
-        return <div className="border rounded p-3 bg-light">Loading editor...</div>;
+        return (
+            <div className="border rounded p-3 bg-light d-flex align-items-center justify-content-center" style={{ minHeight: '200px' }}>
+                <div className="text-center">
+                    <div className="spinner-border text-primary mb-2" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div className="text-muted">Initializing editor...</div>
+                </div>
+            </div>
+        );
     }
 
-    return <CustomEditorComponent setEdit={setEdit} getEdit={getEdit} />;
+    return (
+        <CKEditorComponent
+            setEdit={setEdit}
+            getEdit={getEdit}
+            placeholder="Start typing your note..."
+        />
+    );
 }
 
 export default CustomEditor;

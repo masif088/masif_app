@@ -26,6 +26,7 @@ import { createClient } from "utils/supabase/client";
 
 const Login = () => {
   const [showPassWord, setShowPassWord] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formValues, setFormValues] = useState({
     email: "",
     password: "",
@@ -40,6 +41,9 @@ const Login = () => {
     setFormValues({ ...formValues, [event.target.name]: event.target.value });
   };
   const handleLogin = async () => {
+    if (isLoading) return; // Prevent multiple simultaneous login attempts
+    
+    setIsLoading(true);
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -66,6 +70,8 @@ const Login = () => {
     } catch (error) {
       toast.error("An error occurred during login");
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -134,8 +140,9 @@ const Login = () => {
                         color="primary"
                         className="btn-block w-100"
                         type="submit"
+                        disabled={isLoading}
                       >
-                        {SignIn}
+                        {isLoading ? "Signing In..." : SignIn}
                       </Button>
                     </div>
                   </FormGroup>
