@@ -4,47 +4,17 @@ import Breadcrumbs from 'CommonElements/Breadcrumbs';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import { SyncfusionCalendar } from 'src/components/calendar/syncfusion';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Form, Alert } from 'reactstrap';
 import { toast } from 'react-toastify';
 import { TodoItem, ChecklistItem } from 'Types/TodoType';
-import { X, Plus, Edit2, Trash2, Calendar, List, CheckSquare, ChevronDown, ChevronRight, Move } from 'react-feather';
+import { X, Plus, Edit2, Trash2, Calendar, List, CheckSquare, ChevronDown, ChevronRight, Move, User } from 'react-feather';
+import { TodoService } from 'utils/supabase/todoService';
+import { UserService } from 'utils/supabase/userService';
+import { ProfileData } from 'utils/supabase/profileService';
 
-// Storage key for JSON persistence
-const STORAGE_KEY = 'todo_list_data';
-
-// Generate unique ID
+// Generate unique ID for temporary form items
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-// Load todos from localStorage
-const loadTodos = (): TodoItem[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      return data.todos || [];
-    }
-  } catch (error) {
-    console.error('Error loading todos:', error);
-  }
-  return [];
-};
-
-// Save todos to localStorage
-const saveTodos = (todos: TodoItem[]) => {
-  try {
-    const data = {
-      todos,
-      lastUpdated: new Date().toISOString()
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Error saving todos:', error);
-  }
-};
 
 // Sortable Todo Item Component
 interface SortableTodoItemProps {
@@ -180,6 +150,15 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
                   </Badge>
                 )}
                 
+                {todo.owner && (
+                  <Badge color="info" className="me-2">
+                    <User size={12} className="me-1" style={{ width: '12px', height: '12px', paddingTop: 0 }} />
+                    {todo.owner.first_name && todo.owner.last_name 
+                      ? `${todo.owner.first_name} ${todo.owner.last_name}`
+                      : todo.owner.username || todo.owner.email || 'Owner'}
+                  </Badge>
+                )}
+                
                 <Button
                   color="link"
                   size="sm"
@@ -247,18 +226,33 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
                       <Input
                         type="checkbox"
                         checked={item.completed}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           e.stopPropagation();
-                          // Toggle checklist item completion
-                          const updatedChecklist = todo.checklist!.map(ci => 
-                            ci.id === item.id ? { ...ci, completed: !ci.completed } : ci
-                          );
-                          const updatedTodo = { 
-                            ...todo, 
-                            checklist: updatedChecklist,
-                            updatedAt: new Date().toISOString()
-                          };
-                          onUpdateTodo(updatedTodo);
+                          try {
+                            // Toggle checklist item completion in Supabase
+                            await TodoService.updateChecklistItem(item.id, { completed: !item.completed });
+                            // Reload todos to reflect changes
+                            const updatedChecklist = todo.checklist!.map(ci => 
+                              ci.id === item.id ? { ...ci, completed: !ci.completed } : ci
+                            );
+                            const updatedTodo = { 
+                              ...todo, 
+                              checklist: updatedChecklist,
+                              updatedAt: new Date().toISOString()
+                            };
+                            onUpdateTodo(updatedTodo);
+                          } catch (error) {
+                            console.error('Error toggling checklist item:', error);
+                            console.error('Error details:', {
+                              checklistItemId: item.id,
+                              todoId: todo.id,
+                              completed: item.completed,
+                              message: error instanceof Error ? error.message : String(error),
+                              stack: error instanceof Error ? error.stack : undefined,
+                              error: error
+                            });
+                            toast.error('Failed to update checklist item');
+                          }
                         }}
                         className="me-2"
                         style={{ marginTop: 0 }}
@@ -407,9 +401,10 @@ interface TodoFormModalProps {
   todo?: TodoItem;
   onSave: (todo: TodoItem) => void;
   parentId?: string;
+  selectedDate?: Date | null;
 }
 
-const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onSave, parentId }) => {
+const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onSave, parentId, selectedDate }) => {
   const [formData, setFormData] = useState<Partial<TodoItem>>({
     title: '',
     description: '',
@@ -419,6 +414,7 @@ const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onS
     checklist: [],
     subtasks: [],
     completed: false,
+    userId: '',
   });
   
   const [tagInput, setTagInput] = useState('');
@@ -427,6 +423,14 @@ const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onS
   const [error, setError] = useState('');
   const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
   const [editingChecklistItem, setEditingChecklistItem] = useState<ChecklistItem | null>(null);
+  const [users, setUsers] = useState<ProfileData[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadUsers();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (todo) {
@@ -438,25 +442,88 @@ const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onS
         tags: todo.tags || [],
         checklist: todo.checklist || [],
         completed: todo.completed,
+        userId: todo.userId || '',
       });
       setChecklistItems(todo.checklist || []);
     } else {
-      setFormData({
-        title: '',
-        description: '',
-        priority: 'medium',
-        dueDate: '',
-        tags: [],
-        checklist: [],
-        subtasks: [],
-        completed: false,
-      });
+      // Get current user ID for default
+      const getCurrentUserId = async () => {
+        try {
+          const { createClient } = await import('utils/supabase/client');
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          // Format selectedDate for datetime-local input (YYYY-MM-DDTHH:mm)
+          let formattedDueDate = '';
+          if (selectedDate) {
+            const date = new Date(selectedDate);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            formattedDueDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+          }
+          
+          setFormData({
+            title: '',
+            description: '',
+            priority: 'medium',
+            dueDate: formattedDueDate,
+            tags: [],
+            checklist: [],
+            subtasks: [],
+            completed: false,
+            userId: user?.id || '',
+          });
+        } catch (error) {
+          console.error('Error getting current user:', error);
+          
+          // Format selectedDate for datetime-local input (YYYY-MM-DDTHH:mm)
+          let formattedDueDate = '';
+          if (selectedDate) {
+            const date = new Date(selectedDate);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            formattedDueDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+          }
+          
+          setFormData({
+            title: '',
+            description: '',
+            priority: 'medium',
+            dueDate: formattedDueDate,
+            tags: [],
+            checklist: [],
+            subtasks: [],
+            completed: false,
+            userId: '',
+          });
+        }
+      };
+      getCurrentUserId();
       setChecklistItems([]);
     }
     setTagInput('');
     setChecklistInput('');
     setError('');
-  }, [todo, isOpen]);
+  }, [todo, isOpen, selectedDate]);
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const usersData = await UserService.getAllUsers();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -520,7 +587,7 @@ const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onS
     }
 
     const todoData: TodoItem = {
-      id: todo?.id || generateId(),
+      id: todo?.id || '',
       title: formData.title!,
       description: formData.description,
       priority: formData.priority as 'low' | 'medium' | 'high',
@@ -529,10 +596,11 @@ const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onS
       checklist: checklistItems,
       subtasks: todo?.subtasks || [],
       parentId: parentId || todo?.parentId,
-      order: todo?.order || Date.now(),
+      order: todo?.order || 0,
       completed: formData.completed || false,
       createdAt: todo?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      userId: formData.userId || '',
     };
 
     onSave(todoData);
@@ -604,6 +672,27 @@ const TodoFormModal: React.FC<TodoFormModalProps> = ({ isOpen, toggle, todo, onS
               </FormGroup>
             </Col>
           </Row>
+
+          <FormGroup>
+            <Label for="userId">Assign To User</Label>
+            <Input
+              id="userId"
+              name="userId"
+              type="select"
+              value={formData.userId || ''}
+              onChange={handleInputChange}
+              disabled={loadingUsers}
+            >
+              <option value="">Select a user...</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name && user.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : user.username || user.email || user.id}
+                </option>
+              ))}
+            </Input>
+          </FormGroup>
 
           <FormGroup>
             <Label>Tags</Label>
@@ -714,6 +803,7 @@ const MyCalendar: React.FC = () => {
   const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
   const [editingChecklistItem, setEditingChecklistItem] = useState<ChecklistItem | null>(null);
   const [editingChecklistTodo, setEditingChecklistTodo] = useState<TodoItem | null>(null);
+  const [showAllTodos, setShowAllTodos] = useState<boolean>(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -722,15 +812,29 @@ const MyCalendar: React.FC = () => {
     })
   );
 
-  useEffect(() => {
-    const loadedTodos = loadTodos();
-    setTodos(loadedTodos);
-  }, []);
+  const [loading, setLoading] = useState(true);
 
-  const saveTodosToStorage = useCallback((updatedTodos: TodoItem[]) => {
-    setTodos(updatedTodos);
-    saveTodos(updatedTodos);
-  }, []);
+  useEffect(() => {
+    loadTodosFromSupabase();
+  }, [showAllTodos]);
+
+  const loadTodosFromSupabase = async () => {
+    try {
+      setLoading(true);
+      const todos = await TodoService.getTodos(true, !showAllTodos); // Include subtasks, filter by user if showAllTodos is false
+      setTodos(todos);
+    } catch (error) {
+      console.error('Error loading todos:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
+      toast.error('Failed to load todos');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddTodo = () => {
     setEditingTodo(undefined);
@@ -746,26 +850,53 @@ const MyCalendar: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleEditTodo = (todo: TodoItem) => {
+  const handleEditTodo = useCallback((todo: TodoItem) => {
     setEditingTodo(todo);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleUpdateTodo = (updatedTodo: TodoItem) => {
-    // Update todo without opening modal
-    const updateTodoInTree = (items: TodoItem[]): TodoItem[] => {
-      return items.map(item => {
-        if (item.id === updatedTodo.id) {
-          return updatedTodo;
+  const handleUpdateTodo = async (updatedTodo: TodoItem) => {
+    try {
+      // Update in Supabase
+      await TodoService.updateTodo(updatedTodo.id, updatedTodo);
+      
+      // Update checklist items if changed
+      if (updatedTodo.checklist) {
+        // Get current checklist items from database
+        const currentTodo = await TodoService.getTodoById(updatedTodo.id);
+        const currentChecklistIds = new Set(currentTodo?.checklist?.map(ci => ci.id) || []);
+        const newChecklistIds = new Set(updatedTodo.checklist.map(ci => ci.id));
+        
+        // Delete removed items
+        for (const itemId of Array.from(currentChecklistIds)) {
+          if (!newChecklistIds.has(itemId)) {
+            await TodoService.deleteChecklistItem(itemId);
+          }
         }
-        if (item.subtasks) {
-          return { ...item, subtasks: updateTodoInTree(item.subtasks) };
+        
+        // Update or create items
+        for (const item of updatedTodo.checklist) {
+          if (currentChecklistIds.has(item.id)) {
+            await TodoService.updateChecklistItem(item.id, item);
+          } else {
+            await TodoService.createChecklistItem(updatedTodo.id, item);
+          }
         }
-        return item;
+      }
+      
+      // Reload todos from Supabase
+      await loadTodosFromSupabase();
+      toast.success('Todo updated successfully');
+    } catch (error) {
+      console.error('Error updating todo:', error);
+      console.error('Error details:', {
+        todoId: updatedTodo.id,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
       });
-    };
-    const updatedTodos = updateTodoInTree(todos);
-    saveTodosToStorage(updatedTodos);
+      toast.error('Failed to update todo');
+    }
   };
 
   const handleEditChecklistItem = (todo: TodoItem, checklistItem: ChecklistItem) => {
@@ -774,130 +905,206 @@ const MyCalendar: React.FC = () => {
     setIsChecklistModalOpen(true);
   };
 
-  const handleSaveChecklistItem = (updatedItem: ChecklistItem) => {
+  const handleSaveChecklistItem = async (updatedItem: ChecklistItem) => {
     if (!editingChecklistTodo) return;
 
-    const updatedChecklist = editingChecklistTodo.checklist!.map(item =>
-      item.id === updatedItem.id ? updatedItem : item
-    );
-    const updatedTodo = { ...editingChecklistTodo, checklist: updatedChecklist };
-    
-    // Update todo in tree
-    const updateTodoInTree = (items: TodoItem[]): TodoItem[] => {
-      return items.map(item => {
-        if (item.id === updatedTodo.id) {
-          return updatedTodo;
-        }
-        if (item.subtasks) {
-          return { ...item, subtasks: updateTodoInTree(item.subtasks) };
-        }
-        return item;
+    try {
+      if (updatedItem.id && editingChecklistTodo.checklist?.some(ci => ci.id === updatedItem.id)) {
+        // Update existing item
+        await TodoService.updateChecklistItem(updatedItem.id, updatedItem);
+      } else {
+        // Create new item
+        await TodoService.createChecklistItem(editingChecklistTodo.id, updatedItem);
+      }
+      
+      // Reload todos from Supabase
+      await loadTodosFromSupabase();
+      toast.success('Checklist item saved successfully');
+      setIsChecklistModalOpen(false);
+      setEditingChecklistItem(null);
+      setEditingChecklistTodo(null);
+    } catch (error) {
+      console.error('Error saving checklist item:', error);
+      console.error('Error details:', {
+        checklistItemId: updatedItem.id,
+        todoId: editingChecklistTodo?.id,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
       });
-    };
-    
-    const updatedTodos = updateTodoInTree(todos);
-    saveTodosToStorage(updatedTodos);
-    toast.success('Checklist item updated successfully');
-    setIsChecklistModalOpen(false);
-    setEditingChecklistItem(null);
-    setEditingChecklistTodo(null);
+      toast.error('Failed to save checklist item');
+    }
   };
 
-  const handleSaveTodo = (todoData: TodoItem) => {
-    if (editingTodo && editingTodo.id && editingTodo.id === todoData.id) {
-      // Update existing todo
-      const updateTodoInTree = (items: TodoItem[]): TodoItem[] => {
-        return items.map(item => {
-          if (item.id === todoData.id) {
-            return { ...todoData, subtasks: item.subtasks || [] };
-          }
-          if (item.subtasks) {
-            return { ...item, subtasks: updateTodoInTree(item.subtasks) };
-          }
-          return item;
-        });
-      };
-      const updatedTodos = updateTodoInTree(todos);
-      saveTodosToStorage(updatedTodos);
-      toast.success('Todo updated successfully');
-    } else {
-      // Add new todo or subtask
-      const parentId = addingSubtaskFor || todoData.parentId;
-      
-      const newTodo: TodoItem = {
-        ...todoData,
-        id: todoData.id || generateId(),
-        parentId: parentId,
-        order: parentId ? 0 : (todos.length > 0 ? Math.max(...todos.map(t => t.order)) + 1 : 0),
-      };
-
-      if (parentId) {
-        // Add as subtask
-        const addSubtaskToTree = (items: TodoItem[]): TodoItem[] => {
-          return items.map(item => {
-            if (item.id === parentId) {
-              const existingSubtasks = item.subtasks || [];
-              return {
-                ...item,
-                subtasks: [...existingSubtasks, { ...newTodo, order: existingSubtasks.length }]
-              };
+  const handleSaveTodo = async (todoData: TodoItem) => {
+    try {
+      if (editingTodo && editingTodo.id && editingTodo.id === todoData.id) {
+        // Update existing todo
+        await TodoService.updateTodo(todoData.id, todoData);
+        
+        // Update checklist items
+        if (todoData.checklist) {
+          const currentTodo = await TodoService.getTodoById(todoData.id);
+          const currentChecklistIds = new Set(currentTodo?.checklist?.map(ci => ci.id) || []);
+          const newChecklistIds = new Set(todoData.checklist.map(ci => ci.id));
+          
+          // Delete removed items
+          for (const itemId of Array.from(currentChecklistIds)) {
+            if (!newChecklistIds.has(itemId)) {
+              await TodoService.deleteChecklistItem(itemId);
             }
-            if (item.subtasks) {
-              return { ...item, subtasks: addSubtaskToTree(item.subtasks) };
+          }
+          
+          // Update or create items
+          for (let i = 0; i < todoData.checklist.length; i++) {
+            const item = todoData.checklist[i];
+            if (currentChecklistIds.has(item.id)) {
+              await TodoService.updateChecklistItem(item.id, item);
+            } else {
+              await TodoService.createChecklistItem(todoData.id, item);
             }
-            return item;
-          });
-        };
-        const updatedTodos = addSubtaskToTree(todos);
-        saveTodosToStorage(updatedTodos);
-        toast.success('Subtask added successfully');
-        setAddingSubtaskFor(null);
+          }
+        }
+        
+        await loadTodosFromSupabase();
+        toast.success('Todo updated successfully');
       } else {
-        // Add as root todo
-        saveTodosToStorage([...todos, newTodo]);
-        toast.success('Todo added successfully');
+        // Add new todo or subtask
+        const parentId = addingSubtaskFor || todoData.parentId;
+        
+        // Calculate order
+        const rootTodos = todos.filter(t => !t.parentId);
+        const order = parentId ? 0 : (rootTodos.length > 0 ? Math.max(...rootTodos.map(t => t.order)) + 1 : 0);
+        console.log('order', order);
+        
+        const newTodo = await TodoService.createTodo({
+          ...todoData,
+          parentId: parentId,
+          order: order,
+        });
+        
+        // Create checklist items if provided
+        if (todoData.checklist && todoData.checklist.length > 0 && newTodo) {
+          for (let i = 0; i < todoData.checklist.length; i++) {
+            await TodoService.createChecklistItem(newTodo.id, todoData.checklist[i]);
+          }
+        }
+        
+        await loadTodosFromSupabase();
+        if (parentId) {
+          toast.success('Subtask added successfully');
+          setAddingSubtaskFor(null);
+        } else {
+          toast.success('Todo added successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving todo:', error);
+      console.error('Error details:', {
+        todoId: todoData.id,
+        isEdit: !!(editingTodo && editingTodo.id),
+        parentId: addingSubtaskFor || todoData.parentId,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
+      toast.error('Failed to save todo');
+    }
+  };
+
+  const handleDeleteTodo = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this todo?')) {
+      try {
+        await TodoService.deleteTodo(id);
+        await loadTodosFromSupabase();
+        toast.success('Todo deleted successfully');
+      } catch (error) {
+        console.error('Error deleting todo:', error);
+        console.error('Error details:', {
+          todoId: id,
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          error: error
+        });
+        toast.error('Failed to delete todo');
       }
     }
   };
 
-  const handleDeleteTodo = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this todo?')) {
-      const deleteTodoFromTree = (items: TodoItem[]): TodoItem[] => {
-        return items
-          .filter(item => item.id !== id)
-          .map(item => ({
-            ...item,
-            subtasks: item.subtasks ? deleteTodoFromTree(item.subtasks) : []
-          }));
-      };
-      const updatedTodos = deleteTodoFromTree(todos);
-      saveTodosToStorage(updatedTodos);
-      toast.success('Todo deleted successfully');
+  // Helper function to find todo by ID recursively (including nested subtasks)
+  const findTodoRecursively = (todoList: TodoItem[], id: string): TodoItem | null => {
+    for (const todo of todoList) {
+      if (todo.id === id) {
+        return todo;
+      }
+      if (todo.subtasks && todo.subtasks.length > 0) {
+        const found = findTodoRecursively(todo.subtasks, id);
+        if (found) return found;
+      }
     }
+    return null;
   };
 
-  const handleToggleComplete = (id: string) => {
-    const toggleCompleteInTree = (items: TodoItem[]): TodoItem[] => {
-      return items.map(item => {
-        if (item.id === id) {
-          const newCompleted = !item.completed;
-          // If completing, also complete all subtasks
-          const updatedSubtasks = item.subtasks?.map(st => ({ ...st, completed: newCompleted })) || [];
-          return {
-            ...item,
-            completed: newCompleted,
-            subtasks: updatedSubtasks,
-            updatedAt: new Date().toISOString()
-          };
+  const handleToggleComplete = async (id: string) => {
+    try {
+      // Find todo recursively to ensure we get it with parentId
+      let todo = findTodoRecursively(todos, id);
+      
+      // If not found in nested structure, try to fetch from database
+      if (!todo) {
+        try {
+          todo = await TodoService.getTodoById(id);
+        } catch (error) {
+          console.warn('Could not fetch todo from database:', error);
         }
-        if (item.subtasks) {
-          return { ...item, subtasks: toggleCompleteInTree(item.subtasks) };
-        }
-        return item;
+      }
+      
+      if (!todo) {
+        toast.error('Todo not found');
+        return;
+      }
+      
+      const newCompleted = !todo.completed;
+      const todoCompleted = todo.completed;
+      
+      // Prepare update data - preserve parentId if it exists
+      const updateData: Partial<TodoItem> = { completed: newCompleted };
+      if (todo.parentId) {
+        updateData.parentId = todo.parentId;
+      }
+      
+      // Update the todo
+      await TodoService.updateTodo(id, updateData);
+      
+      // If completing, also complete all subtasks recursively
+      if (newCompleted && todo.subtasks && todo.subtasks.length > 0) {
+        const updateSubtasks = async (subtasks: TodoItem[]) => {
+          for (const subtask of subtasks) {
+            // Preserve parentId when updating subtasks
+            const subtaskUpdateData: Partial<TodoItem> = { completed: true };
+            if (subtask.parentId) {
+              subtaskUpdateData.parentId = subtask.parentId;
+            }
+            await TodoService.updateTodo(subtask.id, subtaskUpdateData);
+            if (subtask.subtasks && subtask.subtasks.length > 0) {
+              await updateSubtasks(subtask.subtasks);
+            }
+          }
+        };
+        await updateSubtasks(todo.subtasks);
+      }
+      
+      await loadTodosFromSupabase();
+    } catch (error) {
+      console.error('Error toggling todo completion:', error);
+      console.error('Error details:', {
+        todoId: id,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
       });
-    };
-    const updatedTodos = toggleCompleteInTree(todos);
-    saveTodosToStorage(updatedTodos);
+      toast.error('Failed to update todo');
+    }
   };
 
   const handleToggleExpand = (id: string) => {
@@ -912,91 +1119,115 @@ const MyCalendar: React.FC = () => {
     });
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const findTodoAndParent = (items: TodoItem[], id: string): { todo: TodoItem | null, parent: TodoItem[] } | null => {
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].id === id) {
-          return { todo: items[i], parent: items };
+    try {
+      const findTodoAndParent = (items: TodoItem[], id: string): { todo: TodoItem | null, parent: TodoItem[] } | null => {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].id === id) {
+            return { todo: items[i], parent: items };
+          }
+          if (items[i].subtasks) {
+            const found = findTodoAndParent(items[i].subtasks!, id);
+            if (found) return found;
+          }
         }
-        if (items[i].subtasks) {
-          const found = findTodoAndParent(items[i].subtasks!, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
+        return null;
+      };
 
-    const activeFound = findTodoAndParent(todos, active.id as string);
-    const overFound = findTodoAndParent(todos, over.id as string);
+      const activeFound = findTodoAndParent(todos, active.id as string);
+      const overFound = findTodoAndParent(todos, over.id as string);
 
-    if (!activeFound || !overFound) return;
+      if (!activeFound || !overFound) return;
 
-    const activeTodo = activeFound.todo!;
-    const activeParent = activeFound.parent;
-    const overParent = overFound.parent;
+      const activeTodo = activeFound.todo!;
+      const activeParent = activeFound.parent;
+      const overParent = overFound.parent;
 
-    // Create a deep copy to avoid mutating state directly
-    const deepCopy = (items: TodoItem[]): TodoItem[] => {
-      return items.map(item => ({
-        ...item,
-        subtasks: item.subtasks ? deepCopy(item.subtasks) : []
-      }));
-    };
+      // Create a deep copy to avoid mutating state directly
+      const deepCopy = (items: TodoItem[]): TodoItem[] => {
+        return items.map(item => ({
+          ...item,
+          subtasks: item.subtasks ? deepCopy(item.subtasks) : []
+        }));
+      };
 
-    const updatedTodos = deepCopy(todos);
+      const updatedTodos = deepCopy(todos);
 
-    // Find and remove active todo from its current position
-    const removeFromTree = (items: TodoItem[], id: string): TodoItem[] => {
-      return items.filter(item => {
-        if (item.id === id) return false;
-        if (item.subtasks) {
-          item.subtasks = removeFromTree(item.subtasks, id);
-        }
-        return true;
-      });
-    };
+      // Find and remove active todo from its current position
+      const removeFromTree = (items: TodoItem[], id: string): TodoItem[] => {
+        return items.filter(item => {
+          if (item.id === id) return false;
+          if (item.subtasks) {
+            item.subtasks = removeFromTree(item.subtasks, id);
+          }
+          return true;
+        });
+      };
 
-    // Find and insert active todo at new position
-    const insertAtPosition = (items: TodoItem[], targetId: string, todoToInsert: TodoItem): TodoItem[] => {
-      return items.map(item => {
-        if (item.id === targetId) {
-          // Insert after the target
-          const index = items.findIndex(t => t.id === targetId);
-          const newItems = [...items];
-          newItems.splice(index + 1, 0, todoToInsert);
+      // Find and insert active todo at new position
+      const insertAtPosition = (items: TodoItem[], targetId: string, todoToInsert: TodoItem): TodoItem[] => {
+        return items.map(item => {
+          if (item.id === targetId) {
+            // Insert after the target
+            const index = items.findIndex(t => t.id === targetId);
+            const newItems = [...items];
+            newItems.splice(index + 1, 0, todoToInsert);
+            return item;
+          }
+          if (item.subtasks) {
+            return {
+              ...item,
+              subtasks: insertAtPosition(item.subtasks, targetId, todoToInsert)
+            };
+          }
           return item;
+        });
+      };
+
+      // Remove active todo
+      let result = removeFromTree(updatedTodos, active.id as string);
+      
+      // Insert at new position
+      result = insertAtPosition(result, over.id as string, activeTodo);
+
+      // Update orders
+      const updateOrders = (items: TodoItem[], startOrder: number = 0): TodoItem[] => {
+        return items.map((item, index) => ({
+          ...item,
+          order: startOrder + index,
+          updatedAt: new Date().toISOString(),
+          subtasks: item.subtasks ? updateOrders(item.subtasks, 0) : []
+        }));
+      };
+
+      const finalTodos = updateOrders(result);
+      
+      // Update orders in Supabase
+      const updateOrderInSupabase = async (items: TodoItem[]) => {
+        for (const item of items) {
+          await TodoService.updateTodoOrder(item.id, item.order);
+          if (item.subtasks && item.subtasks.length > 0) {
+            await updateOrderInSupabase(item.subtasks);
+          }
         }
-        if (item.subtasks) {
-          return {
-            ...item,
-            subtasks: insertAtPosition(item.subtasks, targetId, todoToInsert)
-          };
-        }
-        return item;
+      };
+      
+      await updateOrderInSupabase(finalTodos);
+      await loadTodosFromSupabase();
+    } catch (error) {
+      console.error('Error updating todo order:', error);
+      console.error('Error details:', {
+        activeId: active.id,
+        overId: over.id,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
       });
-    };
-
-    // Remove active todo
-    let result = removeFromTree(updatedTodos, active.id as string);
-    
-    // Insert at new position
-    result = insertAtPosition(result, over.id as string, activeTodo);
-
-    // Update orders
-    const updateOrders = (items: TodoItem[], startOrder: number = 0): TodoItem[] => {
-      return items.map((item, index) => ({
-        ...item,
-        order: startOrder + index,
-        updatedAt: new Date().toISOString(),
-        subtasks: item.subtasks ? updateOrders(item.subtasks, 0) : []
-      }));
-    };
-
-    const finalTodos = updateOrders(result);
-    saveTodosToStorage(finalTodos);
+      toast.error('Failed to update todo order');
+    }
   };
 
   // Flatten todos for calendar view
@@ -1011,28 +1242,15 @@ const MyCalendar: React.FC = () => {
     return result;
   };
 
-  const calendarEvents = flattenTodos(todos)
-    .filter(todo => todo.dueDate)
-    .map(todo => ({
-      id: todo.id,
-      title: todo.title,
-      start: todo.dueDate!,
-      allDay: true,
-      color: todo.priority === 'high' ? '#dc3545' : todo.priority === 'medium' ? '#ffc107' : '#6c757d',
-    }));
-
-  const handleDateClick = (arg: any) => {
-    setSelectedDate(arg.date);
+  const handleDateClick = useCallback((date: Date) => {
+    setSelectedDate(date);
     setEditingTodo(undefined);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleEventClick = (arg: any) => {
-    const todo = flattenTodos(todos).find(t => t.id === arg.event.id);
-    if (todo) {
-      handleEditTodo(todo);
-    }
-  };
+  const handleEventClick = useCallback((todo: TodoItem) => {
+    handleEditTodo(todo);
+  }, [handleEditTodo]);
 
   // Get root todos (no parent)
   const rootTodos = todos.filter(t => !t.parentId).sort((a, b) => a.order - b.order);
@@ -1040,9 +1258,9 @@ const MyCalendar: React.FC = () => {
   return (
     <div className="page-body">
       <Breadcrumbs
-        title="My Calendar"
+        title="To do"
         mainTitle="Todo List & Calendar"
-        parent="Calendar"
+        parent="To do"
       />
       <Container fluid={true}>
         <Row>
@@ -1050,7 +1268,18 @@ const MyCalendar: React.FC = () => {
             <Card>
               <CardHeader className="d-flex justify-content-between align-items-center">
                 <h5>Todo List & Calendar</h5>
-                <div>
+                <div className="d-flex align-items-center">
+                  <FormGroup check className="me-3 mb-0">
+                    <Label check>
+                      <Input
+                        type="checkbox"
+                        checked={showAllTodos}
+                        onChange={(e) => setShowAllTodos(e.target.checked)}
+                        className="me-2"
+                      />
+                      Show All Todos
+                    </Label>
+                  </FormGroup>
                   <Button
                     color={view === 'list' ? 'primary' : 'secondary'}
                     className="me-2"
@@ -1074,41 +1303,41 @@ const MyCalendar: React.FC = () => {
                 </div>
               </CardHeader>
               <CardBody>
-                {view === 'list' ? (
+                {loading ? (
+                  <div className="text-center p-4">Loading todos...</div>
+                ) : view === 'list' ? (
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     onDragEnd={handleDragEnd}
                   >
                     <SortableContext items={rootTodos.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                      {rootTodos.map((todo) => (
-                        <SortableTodoItem
-                          key={todo.id}
-                          todo={todo}
-                          onEdit={handleEditTodo}
-                          onUpdateTodo={handleUpdateTodo}
-                          onDelete={handleDeleteTodo}
-                          onToggleComplete={handleToggleComplete}
-                          onToggleExpand={handleToggleExpand}
-                          onAddSubtask={handleAddSubtask}
-                          onEditChecklistItem={handleEditChecklistItem}
-                          expandedIds={expandedIds}
-                        />
-                      ))}
+                      {rootTodos.length === 0 ? (
+                        <div className="text-center p-4 text-muted">No todos found. Create your first todo!</div>
+                      ) : (
+                        rootTodos.map((todo) => (
+                          <SortableTodoItem
+                            key={todo.id}
+                            todo={todo}
+                            onEdit={handleEditTodo}
+                            onUpdateTodo={handleUpdateTodo}
+                            onDelete={handleDeleteTodo}
+                            onToggleComplete={handleToggleComplete}
+                            onToggleExpand={handleToggleExpand}
+                            onAddSubtask={handleAddSubtask}
+                            onEditChecklistItem={handleEditChecklistItem}
+                            expandedIds={expandedIds}
+                          />
+                        ))
+                      )}
                     </SortableContext>
                   </DndContext>
                 ) : (
-                  <FullCalendar
-                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                    initialView="dayGridMonth"
-                    events={calendarEvents}
-                    dateClick={handleDateClick}
-                    eventClick={handleEventClick}
-                    headerToolbar={{
-                      left: 'prev,next today',
-                      center: 'title',
-                      right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                    }}
+                  <SyncfusionCalendar
+                    todos={todos}
+                    onEventClick={handleEventClick}
+                    onDateClick={handleDateClick}
+                    onEventDelete={handleDeleteTodo}
                   />
                 )}
               </CardBody>
@@ -1128,6 +1357,7 @@ const MyCalendar: React.FC = () => {
         todo={editingTodo && editingTodo.id ? editingTodo : undefined}
         onSave={handleSaveTodo}
         parentId={addingSubtaskFor || undefined}
+        selectedDate={selectedDate}
       />
 
       <ChecklistItemModal

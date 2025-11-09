@@ -70,6 +70,11 @@ export const profileListData: profileType[] = [
         path: '/app/task'
     },
     {
+        icon: 'CheckSquare',
+        text: 'To do',
+        path: '/admin/my-calendar'
+    },
+    {
         icon: 'Settings',
         text: 'Settings',
         path: '/app/users/edit'

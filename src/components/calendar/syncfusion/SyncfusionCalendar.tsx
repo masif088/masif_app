@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ScheduleComponent,
   Day,
@@ -36,6 +36,99 @@ const SyncfusionCalendar: React.FC<SyncfusionCalendarProps> = ({
   onEventDelete
 }) => {
   const [currentView, setCurrentView] = useState<string>('Month');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  // Prevent any form submission or page refresh on calendar clicks
+  useEffect(() => {
+    const calendarElement = calendarRef.current;
+    if (!calendarElement) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Only prevent default for navigation-related elements
+      if (target.tagName === 'A' || target.closest('a')) {
+        const anchor = (target.tagName === 'A' ? target : target.closest('a')) as HTMLAnchorElement | null;
+        if (anchor && anchor.href && anchor.href !== '#' && !anchor.href.startsWith('javascript:')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+      
+      // If clicking on a button without type, prevent form submission
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        const button = (target.tagName === 'BUTTON' ? target : target.closest('button')) as HTMLButtonElement | null;
+        if (button && !button.type) {
+          button.type = 'button';
+        }
+      }
+    };
+
+    const handleSubmit = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+
+    // Use a MutationObserver to watch for dynamically added elements
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) { // Element node
+            const element = node as HTMLElement;
+            
+            // Prevent default on all anchor tags
+            const anchors = element.querySelectorAll ? element.querySelectorAll('a') : [];
+            anchors.forEach(anchor => {
+              anchor.addEventListener('click', (e) => {
+                if (anchor.href && anchor.href !== '#' && !anchor.href.startsWith('javascript:')) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }, true);
+            });
+            
+            // Set button types
+            const buttons = element.querySelectorAll ? element.querySelectorAll('button') : [];
+            buttons.forEach(button => {
+              if (!button.type) {
+                button.type = 'button';
+              }
+            });
+          }
+        });
+      });
+    });
+
+    // Add event listeners
+    calendarElement.addEventListener('click', handleClick, true); // Use capture phase
+    calendarElement.addEventListener('submit', handleSubmit, true);
+    
+    // Also prevent default on existing anchor tags
+    const anchors = calendarElement.querySelectorAll('a');
+    anchors.forEach(anchor => {
+      anchor.addEventListener('click', (e) => {
+        if (anchor.href && anchor.href !== '#' && !anchor.href.startsWith('javascript:')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    });
+
+    // Observe for dynamically added elements
+    observer.observe(calendarElement, {
+      childList: true,
+      subtree: true
+    });
+
+    return () => {
+      calendarElement.removeEventListener('click', handleClick, true);
+      calendarElement.removeEventListener('submit', handleSubmit, true);
+      observer.disconnect();
+    };
+  }, []);
 
   // Convert todos to Syncfusion event format
   const convertTodosToEvents = (): any[] => {
@@ -81,16 +174,45 @@ const SyncfusionCalendar: React.FC<SyncfusionCalendarProps> = ({
 
   const handleEventClick = (args: any) => {
     args.cancel = true; // Disable default behavior
+    // Prevent any navigation or refresh by stopping event propagation
+    if (args.originalEvent) {
+      args.originalEvent.preventDefault?.();
+      args.originalEvent.stopPropagation?.();
+      args.originalEvent.stopImmediatePropagation?.();
+    }
+    // Also try to prevent on the event object itself
+    if (args.event) {
+      args.event.preventDefault?.();
+      args.event.stopPropagation?.();
+    }
     if (args.event && args.event.TodoData && onEventClick) {
       onEventClick(args.event.TodoData);
     }
+    return false; // Explicitly return false to prevent default
   };
 
   const handleCellClick = (args: any) => {
-    args.cancel = true; // Disable default behavior
+    args.cancel = true; // Disable default behavior - this prevents automatic navigation
+    // Prevent any navigation or refresh by stopping event propagation
+    if (args.originalEvent) {
+      args.originalEvent.preventDefault?.();
+      args.originalEvent.stopPropagation?.();
+      args.originalEvent.stopImmediatePropagation?.();
+    }
+    // Also try to prevent on the event object itself
+    if (args.event) {
+      args.event.preventDefault?.();
+      args.event.stopPropagation?.();
+    }
+    // Update selectedDate to the clicked date - this will navigate the calendar
+    if (args.startTime) {
+      setSelectedDate(new Date(args.startTime));
+    }
+    // Call our custom handler
     if (onDateClick) {
       onDateClick(args.startTime);
     }
+    return false; // Explicitly return false to prevent default
   };
 
   const handleActionComplete = (args: ActionEventArgs) => {
@@ -123,8 +245,21 @@ const SyncfusionCalendar: React.FC<SyncfusionCalendarProps> = ({
     }
   };
 
+  const handleNavigating = (args: any) => {
+    // Prevent ALL navigation behavior that causes refresh
+    // This prevents the calendar from navigating to "now" week/month when clicking cells
+    // We want to prevent date navigation but allow view changes via toolbar
+    if (args.action === 'dateNavigate') {
+      // Prevent date navigation (clicking on a date cell to navigate to it)
+      args.cancel = true;
+      return false;
+    }
+    // Allow view navigation (changing between Day/Week/Month views via toolbar)
+    // This is handled by the currentView state
+  };
+
   return (
-    <div style={{ width: '100%', height: '600px' }}>
+    <div ref={calendarRef} style={{ width: '100%', height: '600px' }}>
       <style>{`
         .e-schedule .e-toolbar .e-toolbar-item.e-add,
         .e-schedule .e-toolbar .e-toolbar-item.e-add::before,
@@ -136,13 +271,14 @@ const SyncfusionCalendar: React.FC<SyncfusionCalendarProps> = ({
       <ScheduleComponent
         width="100%"
         height="600px"
-        selectedDate={new Date()}
+        selectedDate={selectedDate}
         currentView={currentView as any}
         eventSettings={eventSettings}
         eventClick={handleEventClick}
         cellClick={handleCellClick}
         actionComplete={handleActionComplete}
         popupOpen={handlePopupOpen}
+        navigating={handleNavigating}
         showQuickInfo={false}
         enableAdaptiveUI={true}
         allowDragAndDrop={false}

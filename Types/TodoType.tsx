@@ -5,6 +5,14 @@ export interface ChecklistItem {
   note?: string;
 }
 
+export interface TodoOwner {
+  id: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+}
+
 export interface TodoItem {
   id: string;
   title: string;
@@ -20,6 +28,8 @@ export interface TodoItem {
   createdAt: string;
   updatedAt: string;
   color?: string;
+  owner?: TodoOwner;
+  userId?: string;
 }
 
 export interface TodoListData {

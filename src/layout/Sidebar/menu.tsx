@@ -42,6 +42,19 @@ export const MenuList: sidebarMenuType[] = [
     ],
   },
   {
+    title: "To do",
+    menucontent: "todo",
+    Items: [
+      {
+        path: "/admin/my-calendar",
+        icon: "material-symbols-light:checklist-outline",
+        type: "link",
+        title: "To do",
+        id: 206,
+      },
+    ],
+  },
+  {
     title: "Finance",
     menucontent: "money",
     Items: [
