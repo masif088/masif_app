@@ -12,14 +12,13 @@ const CKEditorComponent = ({ setEdit, getEdit, placeholder = "Start typing..." }
     // Memoize the editor configuration to prevent unnecessary re-renders
     const editorConfig = useMemo(() => ({
         placeholder: placeholder,
+        resize_enabled: true,
+        removePlugins: ['resize'],
         
         toolbar: {
             items: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', 'underline', '|', 'link', 'insertImageViaUrl', 'mediaEmbed', 'insertTable', 'blockQuote', '|', 'bulletedList', 'numberedList', 'outdent', 'indent'],
         },
-        // Optimize performance settings
-        typing: {
-            undoStep: 20
-        },
+        height: 400,
         // Only remove plugins that don't have dependencies
         // removePlugins: ['Title', 'MediaEmbed', 'Table'],
     }), [placeholder]);
@@ -34,8 +33,10 @@ const CKEditorComponent = ({ setEdit, getEdit, placeholder = "Start typing..." }
         <CKEditor
             editor={ClassicEditor as any}
             data={getEdit}
-            config={editorConfig}
+            // config={editorConfig}
+            
             onChange={handleChange}
+            
         />
     );
 };

@@ -15,7 +15,7 @@ const CourseManagementPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState<LearningCourse | null>(null);
   const [filters, setFilters] = useState<LearningFilters>({});
-  const [sort, setSort] = useState<SortOptions>({ field: 'created_at', order: 'desc' });
+  const [sort, setSort] = useState<SortOptions>({ field: 'createdAt', order: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);

@@ -59,7 +59,7 @@ export const courseService = {
   // Get all courses with filtering and pagination
   async getCourses(
     filters: LearningFilters = {},
-    sort: SortOptions = { field: 'created_at', order: 'desc' },
+    sort: SortOptions = { field: 'createdAt', order: 'desc' },
     page: number = 1,
     limit: number = 10
   ): Promise<LearningListResponse> {
@@ -103,14 +103,14 @@ export const courseService = {
   },
 
   // Delete course
-  async deleteCourse(id: string): Promise<{ success: boolean; message: string }> {
+  async deleteCourse(id: string): Promise<LearningApiResponse<{ success: boolean; message: string }>> {
     return apiRequest<{ success: boolean; message: string }>(`${API_ENDPOINTS.courses}/${id}`, {
       method: 'DELETE',
     });
   },
 
   // Bulk delete courses
-  async bulkDeleteCourses(ids: string[]): Promise<{ success: boolean; message: string }> {
+  async bulkDeleteCourses(ids: string[]): Promise<LearningApiResponse<{ success: boolean; message: string }>> {
     return apiRequest<{ success: boolean; message: string }>(`${API_ENDPOINTS.courses}/bulk-delete`, {
       method: 'DELETE',
       body: JSON.stringify({ ids }),
@@ -126,7 +126,7 @@ export const courseService = {
   },
 
   // Upload course thumbnail
-  async uploadThumbnail(id: string, file: File): Promise<{ thumbnail_url: string }> {
+  async uploadThumbnail(id: string, file: File): Promise<LearningApiResponse<{ thumbnail_url: string }>> {
     const formData = new FormData();
     formData.append('thumbnail', file);
 
@@ -182,7 +182,7 @@ export const categoryService = {
   },
 
   // Delete category
-  async deleteCategory(id: string): Promise<{ success: boolean; message: string }> {
+  async deleteCategory(id: string): Promise<LearningApiResponse<{ success: boolean; message: string }>> {
     return apiRequest<{ success: boolean; message: string }>(`${API_ENDPOINTS.categories}/${id}`, {
       method: 'DELETE',
     });
@@ -328,7 +328,7 @@ export const reviewService = {
   },
 
   // Delete review
-  async deleteReview(reviewId: string): Promise<{ success: boolean; message: string }> {
+  async deleteReview(reviewId: string): Promise<LearningApiResponse<{ success: boolean; message: string }>> {
     return apiRequest<{ success: boolean; message: string }>(`${API_ENDPOINTS.reviews}/${reviewId}`, {
       method: 'DELETE',
     });

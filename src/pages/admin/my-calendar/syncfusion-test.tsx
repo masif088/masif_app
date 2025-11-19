@@ -462,7 +462,7 @@ const SubtaskItem: React.FC<SubtaskItemProps> = ({ subtask, onUpdate, level = 0 
             <div className="d-flex mb-2 mt-2">
               <Input
                 type="text"
-                size="sm"
+                className="form-control-sm"
                 value={checklistInput}
                 onChange={(e) => setChecklistInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddChecklist())}
@@ -506,7 +506,7 @@ const SubtaskItem: React.FC<SubtaskItemProps> = ({ subtask, onUpdate, level = 0 
             <div className="d-flex mb-2 mt-2">
               <Input
                 type="text"
-                size="sm"
+                className="form-control-sm"
                 value={subtaskInput}
                 onChange={(e) => setSubtaskInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubtask())}

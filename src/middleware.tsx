@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
   }
   
   // Clean up old rate limit entries
-  for (const [ip, data] of rateLimitMap.entries()) {
+  for (const [ip, data] of Array.from(rateLimitMap.entries())) {
     if (now - data.timestamp > RATE_LIMIT_WINDOW) {
       rateLimitMap.delete(ip);
     }
@@ -79,7 +79,7 @@ export async function middleware(request: NextRequest) {
     sessionCache.set(cacheKey, { session, timestamp: now });
     
     // Clean up old cache entries
-    for (const [key, value] of sessionCache.entries()) {
+    for (const [key, value] of Array.from(sessionCache.entries())) {
       if (now - value.timestamp > CACHE_DURATION) {
         sessionCache.delete(key);
       }

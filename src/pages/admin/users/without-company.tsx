@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, CardHeader, CardBody, Button, Input, Badge } from 'reactstrap';
-import { Users, Search, Edit, Delete, Eye } from 'utils/Constant';
+import { Users, Search, Edit, Delete } from 'utils/Constant';
 import Breadcrumbs from 'CommonElements/Breadcrumbs';
 import { ProfileData } from 'utils/supabase/profileService';
 import { UserService } from 'utils/supabase/userService';
@@ -94,15 +94,13 @@ const UsersWithoutCompanyPage = () => {
     }
   };
 
-  const breadcrumbItems = [
-    { title: 'Admin', link: '/admin' },
-    { title: 'Users', link: '/admin/users' },
-    { title: 'Users Without Company', link: '/admin/users/without-company' }
-  ];
-
   return (
     <div className="page-body">
-      <Breadcrumbs title="Users Without Company" breadcrumbItems={breadcrumbItems} />
+      <Breadcrumbs
+        title="Users Without Company"
+        mainTitle="Users Without Company"
+        parent="Admin"
+      />
       
       <Container fluid>
         <Row>

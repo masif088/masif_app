@@ -164,9 +164,10 @@ const ActivityDetail = () => {
             });
 
             // If it's a public note and activity has a company, send email notification
-            if (!isInternalNote && activity.company_id) {
-                await sendPublicNoteEmailNotification(activity, newNote, user);
-            }
+            // TODO: Implement sendPublicNoteEmailNotification function
+            // if (!isInternalNote && activity.company_id) {
+            //     await sendPublicNoteEmailNotification(activity, newNote, user);
+            // }
 
             fetchActivityNotes();
             setNewNote("");
@@ -835,20 +836,19 @@ const ActivityDetail = () => {
                 size: "lg"
             }}
         >
-            {sendingEmail && (
-                <div className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" 
-                     style={{top: 0, left: 0, backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 1000}}>
-                    <div className="text-center">
-                        <div className="spinner-border text-primary mb-3" role="status">
-                            <span className="sr-only">Sending email...</span>
-                        </div>
-                        <h6 className="text-muted">Sending email...</h6>
-                        <p className="text-muted small">Please wait while we send your email</p>
-                    </div>
-                </div>
-            )}
-            
             <div className="email-modal-content" style={{position: 'relative'}}>
+                {sendingEmail && (
+                    <div className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" 
+                         style={{top: 0, left: 0, backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 1000}}>
+                        <div className="text-center">
+                            <div className="spinner-border text-primary mb-3" role="status">
+                                <span className="sr-only">Sending email...</span>
+                            </div>
+                            <h6 className="text-muted">Sending email...</h6>
+                            <p className="text-muted small">Please wait while we send your email</p>
+                        </div>
+                    </div>
+                )}
                 <div className="row">
                     <div className="col-md-6">
                         <label className="form-label">To:</label>
