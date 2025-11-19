@@ -114,6 +114,19 @@ export const MenuList: sidebarMenuType[] = [
       },
     ],
   },
+  {
+    title: "Customer",
+    menucontent: "customer",
+    Items: [
+      {
+        path: "/admin/customer",
+        icon: "material-symbols-light:people-outline",
+        type: "link",
+        title: "Customers",
+        id: 207,
+      },
+    ],
+  },
  
   
   {
