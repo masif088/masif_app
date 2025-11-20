@@ -776,19 +776,17 @@ const CustomerManagement = () => {
                         padding: "0.5rem 0.75rem",
                         userSelect: "none"
                       }}
-                      onClick={() => {
+                      onClick={async () => {
                         const placeholder = "{[name]}";
-                        const currentContent = contentTemplateForm.content;
-                        const newContent = currentContent 
-                          ? (currentContent.endsWith(" ") ? currentContent : currentContent + " ") + placeholder
-                          : placeholder;
-                        setContentTemplateForm({
-                          ...contentTemplateForm,
-                          content: newContent,
-                        });
+                        try {
+                          await navigator.clipboard.writeText(placeholder);
+                          toast.info("Placeholder copied to clipboard.");
+                        } catch (error) {
+                          toast.error("Failed to copy to clipboard.");
+                        }
                       }}
                     >
-                      {"{[name]}"}
+                      {"Name"}
                     </Badge>
                     {/* Group templates by group property */}
                     {Object.entries(
@@ -812,22 +810,32 @@ const CustomerManagement = () => {
                                 cursor: "pointer", 
                                 fontSize: "0.875rem", 
                                 padding: "0.5rem 0.75rem",
-                                userSelect: "none"
+                                userSelect: "none",
+                                marginLeft: "0px"
                               }}
-                              onClick={() => {
+                              onClick={async () => {
                                 const placeholder = `{[${template.key}]}`;
-                                const currentContent = contentTemplateForm.content;
-                                const newContent = currentContent 
-                                  ? (currentContent.endsWith(" ") ? currentContent : currentContent + " ") + placeholder
-                                  : placeholder;
-                                setContentTemplateForm({
-                                  ...contentTemplateForm,
-                                  content: newContent,
-                                });
+                              
+                                  // fallback: copy to clipboard
+                                  try {
+                                    await navigator.clipboard.writeText(placeholder);
+                                    toast.info("Placeholder copied. Paste it (Ctrl+V) at your desired place.");
+                                  } catch (err) {
+                                    // fallback: add at end if clipboard failed  
+                                    const currentContent = contentTemplateForm.content;
+                                    const newContent = currentContent 
+                                      ? (currentContent.endsWith(" ") ? currentContent : currentContent + " ") + placeholder
+                                      : placeholder;
+                                    setContentTemplateForm({
+                                      ...contentTemplateForm,
+                                      content: newContent,
+                                    });
+                                  }
+                                
                               }}
                               title={template.title}
                             >
-                              {`{[${template.key}]}`}
+                              {`${template.title}`}
                             </Badge>
                           ))}
                         </div>
