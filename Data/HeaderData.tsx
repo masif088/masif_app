@@ -62,7 +62,7 @@ export const profileListData: profileType[] = [
     {
         icon: 'Mail',
         text: 'Inbox',
-        path: '/dashboard/default'
+        path: '/admin/dashboard'
     },
     {
         icon: 'FileText',

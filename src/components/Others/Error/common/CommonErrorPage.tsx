@@ -18,7 +18,7 @@ const CommonErrorPage = ({tittle,tittleClassName,BtnClassName,}: errorPageCommon
             <p className="sub-content">{CommonErrorPageText}</p>
           </Col>
           <div>
-            <Link className={`btn  ${BtnClassName} btn-lg `} href={"/dashboard/default"}>
+            <Link className={`btn  ${BtnClassName} btn-lg `} href={"/admin/dashboard"}>
               {BackToHomePage}
             </Link>
           </div>

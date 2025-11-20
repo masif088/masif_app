@@ -22,7 +22,7 @@ const Breadcrumbs = ({ title, mainTitle, parent, subParent }: varTypes) => {
             <Col xs={6} className="p-0">
               <ol className="breadcrumb">
                 <li className="breadcrumb-item">
-                  <Link href={`/dashboard/default`}>
+                  <Link href={`/admin/dashboard`}>
                     <SvgIcon iconId="stroke-home" />
                   </Link>
                 </li>

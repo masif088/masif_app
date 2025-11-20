@@ -34,7 +34,7 @@ const SidebarLogo = () => {
 
   return (
     <div className="logo-wrapper" style={{ paddingTop: "30px" }}>
-      <Link href={"/dashboard/default"}>
+      <Link href={"/admin/dashboard"}>
         {!isLoading ? (
           <>
             <Image

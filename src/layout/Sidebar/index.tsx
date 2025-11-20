@@ -46,7 +46,7 @@ const Sidebar = () => {
       <div>
         <SidebarLogo />
         <div className="logo-icon-wrapper">
-          <Link href={"/dashboard/default"}>
+          <Link href={"/admin/dashboard"}>
             {!isLoadingFavicon ? (
               <Image
                 width={35}

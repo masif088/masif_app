@@ -9,7 +9,7 @@ const CommonLogo = ({ alignLogo }: propsType) => {
   return (
     <Link
       className={`logo ${alignLogo ? alignLogo : ""} `}
-      href="dashboard/default"
+      href="/admin/dashboard"
     >
       <Image
         width={121}

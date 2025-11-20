@@ -106,7 +106,7 @@ export async function middleware(request: NextRequest) {
   // If user is authenticated and trying to access auth pages, redirect to dashboard
   if (session && isAuthPage) {
     console.log('Middleware: Redirecting authenticated user to dashboard');
-    return NextResponse.redirect(new URL("/dashboard/default", request.url));
+    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
   
   // For admin pages, check if user has admin role (only if session exists)
@@ -122,7 +122,7 @@ export async function middleware(request: NextRequest) {
       if (userData?.role !== 'Administrator') {
         console.log('Non-admin user trying to access admin page:', session.user.id);
         // You can either redirect to dashboard or show an error page
-        return NextResponse.redirect(new URL("/dashboard/default", request.url));
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
       }
     } catch (error) {
       console.error('Error checking user role:', error);

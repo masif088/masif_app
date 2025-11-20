@@ -26,13 +26,13 @@ const CartHeader = () => {
           <li className="text-center">
             <Link
               className="d-block mb-3 view-cart f-w-700"
-              href={`/dashboard/default`}
+              href={`/admin/dashboard`}
             >
               {Gotoyourcart}
             </Link>
             <Link
               className="btn btn-primary view-checkout"
-              href={`/dashboard/default`}
+              href={`/admin/dashboard`}
             >
               {Checkout}
             </Link>

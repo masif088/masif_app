@@ -13,7 +13,7 @@ const Leftbar = () => {
     <Fragment>
       <Col className="header-logo-wrapper col-auto p-0">
         <div className="logo-wrapper">
-          <Link href={"/dashboard/default"}>
+          <Link href={"/admin/dashboard"}>
             <Image
               className="img-fluid for-light"
               src={`${ImgPath}/logo/logo.png`}

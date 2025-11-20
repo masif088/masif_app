@@ -1,0 +1,488 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.activities (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  title text,
+  description text,
+  activity_start timestamp with time zone,
+  activity_end timestamp with time zone,
+  user_id uuid,
+  status text,
+  priority text,
+  type text,
+  note text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  tags text,
+  link text,
+  column_index bigint DEFAULT '0'::bigint,
+  company_id integer,
+  CONSTRAINT activities_pkey PRIMARY KEY (id),
+  CONSTRAINT activities_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT activities_priority_fkey FOREIGN KEY (priority) REFERENCES public.activity_priorities(title),
+  CONSTRAINT activities_status_fkey FOREIGN KEY (status) REFERENCES public.activity_statuses(title),
+  CONSTRAINT activity_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.activity_emails (
+  id integer NOT NULL DEFAULT nextval('activity_emails_id_seq'::regclass),
+  activity_id integer NOT NULL,
+  user_id uuid NOT NULL,
+  to_emails ARRAY NOT NULL,
+  cc_emails ARRAY DEFAULT '{}'::text[],
+  bcc_emails ARRAY DEFAULT '{}'::text[],
+  subject text NOT NULL,
+  body text NOT NULL,
+  sent_at timestamp with time zone DEFAULT now(),
+  status character varying DEFAULT 'sent'::character varying,
+  CONSTRAINT activity_emails_pkey PRIMARY KEY (id),
+  CONSTRAINT activity_emails_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES public.activities(id),
+  CONSTRAINT activity_emails_user_id_fkey1 FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.activity_notes (
+  id integer NOT NULL DEFAULT nextval('activity_notes_id_seq'::regclass),
+  activity_id integer NOT NULL,
+  user_id uuid,
+  content text NOT NULL,
+  is_internal boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  email text,
+  email_uid text,
+  CONSTRAINT activity_notes_pkey PRIMARY KEY (id),
+  CONSTRAINT activity_notes_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES public.activities(id),
+  CONSTRAINT activity_notes_user_id_fkey1 FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.activity_priorities (
+  title text NOT NULL,
+  description text,
+  sub_title text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  color text,
+  level bigint DEFAULT '99'::bigint,
+  CONSTRAINT activity_priorities_pkey PRIMARY KEY (title)
+);
+CREATE TABLE public.activity_statuses (
+  title text NOT NULL UNIQUE,
+  sub_title text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  description text,
+  is_active boolean DEFAULT true,
+  level bigint,
+  color character varying DEFAULT 'primary'::character varying,
+  CONSTRAINT activity_statuses_pkey PRIMARY KEY (title)
+);
+CREATE TABLE public.activity_types (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  title text,
+  sub_title text,
+  description text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  deleted_at timestamp with time zone,
+  CONSTRAINT activity_types_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.checklist_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  todo_id uuid NOT NULL,
+  text character varying NOT NULL,
+  completed boolean NOT NULL DEFAULT false,
+  note text,
+  order_index integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT checklist_items_pkey PRIMARY KEY (id),
+  CONSTRAINT checklist_items_todo_id_fkey FOREIGN KEY (todo_id) REFERENCES public.todos(id)
+);
+CREATE TABLE public.companies (
+  id integer NOT NULL DEFAULT nextval('companies_id_seq'::regclass),
+  name character varying NOT NULL,
+  description text,
+  website character varying,
+  logo character varying,
+  address text,
+  city character varying,
+  postal_code character varying,
+  country character varying,
+  phone character varying,
+  email character varying,
+  industry character varying,
+  founded_date date,
+  leader_id uuid,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT companies_pkey PRIMARY KEY (id),
+  CONSTRAINT companies_leader_id_fkey FOREIGN KEY (leader_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.contact_email_categories (
+  id integer NOT NULL DEFAULT nextval('contact_email_categories_id_seq'::regclass),
+  user_id uuid NOT NULL,
+  name character varying NOT NULL,
+  color character varying DEFAULT 'primary'::character varying,
+  is_default boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT contact_email_categories_pkey PRIMARY KEY (id),
+  CONSTRAINT contact_email_categories_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.contact_emails (
+  id integer NOT NULL DEFAULT nextval('contact_emails_id_seq'::regclass),
+  user_id uuid NOT NULL,
+  name character varying NOT NULL,
+  email character varying NOT NULL,
+  category character varying DEFAULT 'General'::character varying,
+  notes text,
+  is_favorite boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT contact_emails_pkey PRIMARY KEY (id),
+  CONSTRAINT contact_emails_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.course_analytics (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  course_id uuid NOT NULL,
+  date date NOT NULL,
+  views integer DEFAULT 0,
+  enrollments integer DEFAULT 0,
+  completions integer DEFAULT 0,
+  revenue numeric DEFAULT 0.00,
+  avg_watch_time_minutes numeric DEFAULT 0.00,
+  bounce_rate numeric DEFAULT 0.00,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT course_analytics_pkey PRIMARY KEY (id),
+  CONSTRAINT course_analytics_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
+);
+CREATE TABLE public.course_categories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL UNIQUE,
+  description text,
+  icon character varying,
+  color character varying DEFAULT '#007bff'::character varying,
+  is_active boolean DEFAULT true,
+  sort_order integer DEFAULT 0,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT course_categories_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.course_enrollments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  course_id uuid NOT NULL,
+  enrollment_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  completion_date timestamp without time zone,
+  progress_percentage numeric DEFAULT 0.00,
+  last_accessed timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  is_active boolean DEFAULT true,
+  payment_amount numeric DEFAULT 0.00,
+  payment_status character varying DEFAULT 'pending'::character varying CHECK (payment_status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying, 'refunded'::character varying]::text[])),
+  certificate_issued boolean DEFAULT false,
+  certificate_url character varying,
+  certificate_issued_at timestamp without time zone,
+  CONSTRAINT course_enrollments_pkey PRIMARY KEY (id),
+  CONSTRAINT course_enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
+  CONSTRAINT course_enrollments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.course_lessons (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  section_id uuid NOT NULL,
+  title character varying NOT NULL,
+  description text,
+  lesson_type character varying DEFAULT 'video'::character varying CHECK (lesson_type::text = ANY (ARRAY['video'::character varying, 'text'::character varying, 'quiz'::character varying, 'assignment'::character varying, 'download'::character varying]::text[])),
+  duration_minutes integer DEFAULT 0,
+  content text,
+  video_url character varying,
+  video_duration integer,
+  is_preview boolean DEFAULT false,
+  is_free boolean DEFAULT false,
+  sort_order integer DEFAULT 0,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT course_lessons_pkey PRIMARY KEY (id),
+  CONSTRAINT course_lessons_section_id_fkey FOREIGN KEY (section_id) REFERENCES public.course_sections(id)
+);
+CREATE TABLE public.course_reviews (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  course_id uuid NOT NULL,
+  enrollment_id uuid NOT NULL,
+  rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  review_text text,
+  is_verified_purchase boolean DEFAULT false,
+  helpful_votes integer DEFAULT 0,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT course_reviews_pkey PRIMARY KEY (id),
+  CONSTRAINT course_reviews_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
+  CONSTRAINT course_reviews_enrollment_id_fkey FOREIGN KEY (enrollment_id) REFERENCES public.course_enrollments(id),
+  CONSTRAINT course_reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.course_sections (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  course_id uuid NOT NULL,
+  title character varying NOT NULL,
+  description text,
+  duration_hours numeric DEFAULT 0.00,
+  sort_order integer DEFAULT 0,
+  is_free boolean DEFAULT false,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT course_sections_pkey PRIMARY KEY (id),
+  CONSTRAINT course_sections_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
+);
+CREATE TABLE public.courses (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  slug character varying NOT NULL UNIQUE,
+  description text,
+  short_description character varying,
+  instructor_id uuid NOT NULL,
+  category_id uuid NOT NULL,
+  level character varying DEFAULT 'Beginner'::character varying CHECK (level::text = ANY (ARRAY['Beginner'::character varying, 'Intermediate'::character varying, 'Advanced'::character varying, 'All Levels'::character varying]::text[])),
+  duration_hours numeric DEFAULT 0.00,
+  price numeric DEFAULT 0.00,
+  original_price numeric,
+  status character varying DEFAULT 'Draft'::character varying CHECK (status::text = ANY (ARRAY['Draft'::character varying, 'Active'::character varying, 'Archived'::character varying, 'Scheduled'::character varying]::text[])),
+  language character varying DEFAULT 'English'::character varying,
+  thumbnail_url character varying,
+  video_preview_url character varying,
+  certificate_available boolean DEFAULT false,
+  max_enrollment integer,
+  current_enrollment integer DEFAULT 0,
+  average_rating numeric DEFAULT 0.00,
+  total_ratings integer DEFAULT 0,
+  completion_rate numeric DEFAULT 0.00,
+  tags jsonb,
+  prerequisites jsonb,
+  learning_outcomes jsonb,
+  subtitles jsonb,
+  is_featured boolean DEFAULT false,
+  is_bestseller boolean DEFAULT false,
+  published_at timestamp without time zone,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT courses_pkey PRIMARY KEY (id),
+  CONSTRAINT courses_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.course_categories(id),
+  CONSTRAINT courses_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES public.instructors(id)
+);
+CREATE TABLE public.customer_content_templates (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  content text NOT NULL,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT customer_content_templates_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.customer_data_templates (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  key character varying NOT NULL UNIQUE,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  group text,
+  CONSTRAINT customer_data_templates_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.customer_details (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  customer_id uuid NOT NULL,
+  customer_data_template_id uuid NOT NULL,
+  value text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT customer_details_pkey PRIMARY KEY (id),
+  CONSTRAINT customer_details_customer_data_template_id_fkey FOREIGN KEY (customer_data_template_id) REFERENCES public.customer_data_templates(id),
+  CONSTRAINT customer_details_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id)
+);
+CREATE TABLE public.customers (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  register_at timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  user_id uuid,
+  CONSTRAINT customers_pkey PRIMARY KEY (id),
+  CONSTRAINT customers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.instructors (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  bio text,
+  expertise jsonb,
+  social_links jsonb,
+  total_courses integer DEFAULT 0,
+  total_students integer DEFAULT 0,
+  average_rating numeric DEFAULT 0.00,
+  total_earnings numeric DEFAULT 0.00,
+  is_verified boolean DEFAULT false,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT instructors_pkey PRIMARY KEY (id),
+  CONSTRAINT instructors_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.kanban_tasks (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  status text,
+  summary text,
+  type text,
+  priority text,
+  tags text,
+  estimate text,
+  assignee text,
+  rank_id text,
+  CONSTRAINT kanban_tasks_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.lesson_attachments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  lesson_id uuid NOT NULL,
+  name character varying NOT NULL,
+  file_type character varying NOT NULL CHECK (file_type::text = ANY (ARRAY['pdf'::character varying, 'doc'::character varying, 'zip'::character varying, 'image'::character varying, 'video'::character varying, 'audio'::character varying]::text[])),
+  file_url character varying NOT NULL,
+  file_size bigint,
+  download_count integer DEFAULT 0,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT lesson_attachments_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_attachments_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.course_lessons(id)
+);
+CREATE TABLE public.lesson_progress (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  lesson_id uuid NOT NULL,
+  enrollment_id uuid NOT NULL,
+  is_completed boolean DEFAULT false,
+  completed_at timestamp without time zone,
+  watch_time_seconds integer DEFAULT 0,
+  last_position_seconds integer DEFAULT 0,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT lesson_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_progress_enrollment_id_fkey FOREIGN KEY (enrollment_id) REFERENCES public.course_enrollments(id),
+  CONSTRAINT lesson_progress_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.course_lessons(id),
+  CONSTRAINT lesson_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.payments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  course_id uuid NOT NULL,
+  enrollment_id uuid NOT NULL,
+  amount numeric NOT NULL,
+  currency character varying DEFAULT 'USD'::character varying,
+  payment_method character varying NOT NULL CHECK (payment_method::text = ANY (ARRAY['credit_card'::character varying, 'paypal'::character varying, 'stripe'::character varying, 'bank_transfer'::character varying]::text[])),
+  payment_status character varying DEFAULT 'pending'::character varying CHECK (payment_status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying, 'refunded'::character varying, 'cancelled'::character varying]::text[])),
+  transaction_id character varying,
+  gateway_response jsonb,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT payments_pkey PRIMARY KEY (id),
+  CONSTRAINT payments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
+  CONSTRAINT payments_enrollment_id_fkey FOREIGN KEY (enrollment_id) REFERENCES public.course_enrollments(id),
+  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.review_helpful_votes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  review_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  is_helpful boolean NOT NULL,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT review_helpful_votes_pkey PRIMARY KEY (id),
+  CONSTRAINT review_helpful_votes_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.course_reviews(id),
+  CONSTRAINT review_helpful_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.settings (
+  key text NOT NULL,
+  title text,
+  value text,
+  type text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT settings_pkey PRIMARY KEY (key)
+);
+CREATE TABLE public.todos (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title character varying NOT NULL,
+  description text,
+  completed boolean NOT NULL DEFAULT false,
+  due_date timestamp with time zone,
+  priority character varying NOT NULL DEFAULT 'medium'::character varying CHECK (priority::text = ANY (ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying]::text[])),
+  tags ARRAY,
+  parent_id uuid,
+  order_index integer NOT NULL DEFAULT 0,
+  color character varying,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT todos_pkey PRIMARY KEY (id),
+  CONSTRAINT todos_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.todos(id),
+  CONSTRAINT todos_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_activity_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  course_id uuid,
+  lesson_id uuid,
+  activity_type character varying NOT NULL CHECK (activity_type::text = ANY (ARRAY['course_view'::character varying, 'lesson_view'::character varying, 'lesson_complete'::character varying, 'quiz_attempt'::character varying, 'download'::character varying, 'review'::character varying]::text[])),
+  activity_data jsonb,
+  ip_address character varying,
+  user_agent text,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT user_activity_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT user_activity_logs_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id),
+  CONSTRAINT user_activity_logs_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.course_lessons(id),
+  CONSTRAINT user_activity_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.users (
+  id uuid NOT NULL,
+  first_name text,
+  last_name text,
+  email text,
+  role text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT '2025-06-15 11:52:01.173189+00'::timestamp with time zone,
+  deleted_at timestamp with time zone,
+  username text,
+  address text,
+  city text,
+  postal_code text,
+  country text,
+  about_me text,
+  website text,
+  avatar text,
+  skills text,
+  phone text,
+  company_id integer,
+  CONSTRAINT users_pkey PRIMARY KEY (id),
+  CONSTRAINT users_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.wallet_transactions (
+  wallet_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  type character varying NOT NULL CHECK (type::text = ANY (ARRAY['credit'::character varying::text, 'debit'::character varying::text])),
+  amount numeric NOT NULL,
+  description text,
+  category character varying,
+  reference_id character varying,
+  status character varying DEFAULT 'completed'::character varying CHECK (status::text = ANY (ARRAY['pending'::character varying::text, 'completed'::character varying::text, 'failed'::character varying::text, 'cancelled'::character varying::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL UNIQUE,
+  CONSTRAINT wallet_transactions_pkey PRIMARY KEY (id),
+  CONSTRAINT transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT transactions_wallet_id_fkey FOREIGN KEY (wallet_id) REFERENCES public.wallets(id)
+);
+CREATE TABLE public.wallets (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  owner_id uuid NOT NULL,
+  balance numeric NOT NULL DEFAULT 0.00,
+  currency character varying NOT NULL DEFAULT 'USD'::character varying,
+  description text,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT wallets_pkey PRIMARY KEY (id),
+  CONSTRAINT wallets_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.users(id)
+);
