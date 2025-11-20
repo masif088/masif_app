@@ -16,6 +16,17 @@ import {
 export class CustomerService {
   private static supabase = createClient();
 
+  // Get current user ID
+  private static async getUserId(): Promise<string | null> {
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      return user?.id || null;
+    } catch (error) {
+      console.error('Error getting user ID:', error);
+      return null;
+    }
+  }
+
   // Get all customers
   static async getAllCustomers(): Promise<Customer[]> {
     try {
@@ -23,6 +34,14 @@ export class CustomerService {
         .from('customers')
         .select(`
           *,
+          user_id,
+          user:users(
+              id,
+              first_name,
+              last_name,
+              email,
+              avatar
+          ),
           details:customer_details(
             id,
             customer_id,
@@ -58,6 +77,7 @@ export class CustomerService {
         .from('customers')
         .select(`
           *,
+          user_id,
           details:customer_details(
             id,
             customer_id,
@@ -86,11 +106,20 @@ export class CustomerService {
   // Create a new customer
   static async createCustomer(customerData: CreateCustomerData): Promise<Customer | null> {
     try {
+      // Get current user ID if not provided
+      const userId = customerData.user_id || await this.getUserId();
+      
+      const dataToInsert = {
+        ...customerData,
+        user_id: userId,
+      };
+
       const { data, error } = await this.supabase
         .from('customers')
-        .insert([customerData])
+        .insert([dataToInsert])
         .select(`
           *,
+          user_id,
           details:customer_details(
             id,
             customer_id,
@@ -124,6 +153,7 @@ export class CustomerService {
         .eq('id', id)
         .select(`
           *,
+          user_id,
           details:customer_details(
             id,
             customer_id,
@@ -393,6 +423,7 @@ export class CustomerService {
         .from('customers')
         .select(`
           *,
+          user_id,
           details:customer_details(
             id,
             customer_id,
@@ -430,6 +461,7 @@ export class CustomerService {
         .from('customers')
         .select(`
           *,
+          user_id,
           details:customer_details(
             id,
             customer_id,

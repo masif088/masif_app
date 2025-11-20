@@ -430,6 +430,7 @@ const CustomerManagement = () => {
                       <th>Name</th>
                       <th>Register Date</th>
                       <th>Details</th>
+                      <th>Owner</th>
                       <th>Created</th>
                       <th>Actions</th>
                     </tr>
@@ -449,6 +450,11 @@ const CustomerManagement = () => {
                           <Badge color="secondary">
                             {customer.details?.length || 0} details
                           </Badge>
+                        </td>
+                        <td>
+                          {customer.user
+                            ? `${customer.user.first_name} ${customer.user.last_name}`.trim()
+                            : (customer.user_id || <span className="text-muted">No owner</span>)}
                         </td>
                         <td>
                           {new Date(customer.created_at).toLocaleDateString()}

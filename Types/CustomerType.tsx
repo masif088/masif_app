@@ -2,9 +2,19 @@ export interface Customer {
   id: string;
   name: string;
   register_at: string;
+  user_id?: string;
   created_at: string;
   updated_at: string;
   details?: CustomerDetail[];
+  user?: User;
+}
+
+export interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  avatar?: string;
 }
 
 export interface CustomerDataTemplate {
@@ -29,11 +39,13 @@ export interface CustomerDetail {
 export interface CreateCustomerData {
   name: string;
   register_at?: string;
+  user_id?: string;
 }
 
 export interface UpdateCustomerData {
   name?: string;
   register_at?: string;
+  user_id?: string;
 }
 
 export interface CreateCustomerDetailData {
