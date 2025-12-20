@@ -29,6 +29,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'tracking_session_id and page_url are required' });
     }
 
+    // Validate and sanitize integer values to prevent out of range errors
+    if (pageViewData.load_time !== undefined && pageViewData.load_time !== null) {
+      const loadTime = parseInt(pageViewData.load_time);
+      if (isNaN(loadTime) || loadTime < 0 || loadTime > 2147483647) {
+        pageViewData.load_time = null; // Set to null if invalid
+      } else {
+        pageViewData.load_time = loadTime;
+      }
+    }
+
+    if (pageViewData.time_on_page !== undefined && pageViewData.time_on_page !== null) {
+      const timeOnPage = parseInt(pageViewData.time_on_page);
+      if (isNaN(timeOnPage) || timeOnPage < 0 || timeOnPage > 2147483647) {
+        pageViewData.time_on_page = null; // Set to null if invalid
+      } else {
+        pageViewData.time_on_page = timeOnPage;
+      }
+    }
+
+    if (pageViewData.scroll_depth !== undefined && pageViewData.scroll_depth !== null) {
+      const scrollDepth = parseInt(pageViewData.scroll_depth);
+      if (isNaN(scrollDepth) || scrollDepth < 0 || scrollDepth > 100) {
+        pageViewData.scroll_depth = null; // Set to null if invalid
+      } else {
+        pageViewData.scroll_depth = scrollDepth;
+      }
+    }
+
     // Set timeout for the entire operation (10 seconds)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Request timeout')), 10000);

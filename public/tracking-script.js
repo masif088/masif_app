@@ -323,13 +323,18 @@
         // Track pageview before navigation for current page
         if (config.trackingSessionId) {
           const timeOnPage = Math.round((Date.now() - pageStartTime) / 1000);
+          // Validate time_on_page: must be positive and within INTEGER range
+          const validTimeOnPage = (timeOnPage > 0 && timeOnPage <= 2147483647) ? timeOnPage : null;
+          // Validate scroll_depth: must be between 0-100
+          const validScrollDepth = (maxScrollDepth >= 0 && maxScrollDepth <= 100) ? maxScrollDepth : null;
+          
           const currentPageViewData = {
             tracking_session_id: config.trackingSessionId,
             page_url: window.location.href,
             page_title: document.title,
             referrer: document.referrer || null,
-            scroll_depth: maxScrollDepth,
-            time_on_page: timeOnPage > 0 ? timeOnPage : null,
+            scroll_depth: validScrollDepth,
+            time_on_page: validTimeOnPage,
           };
           
           // Use sendBeacon for reliability during navigation
@@ -391,13 +396,33 @@
   let pageViewTracked = false;
   let pageViewQueue = null; // Queue pageview data if session not ready
   
+  // Helper function to safely calculate load time
+  function getLoadTime() {
+    if (!performance.timing) return null;
+    
+    const { loadEventEnd, navigationStart } = performance.timing;
+    
+    // Check if values are valid and loadEventEnd is after navigationStart
+    if (!loadEventEnd || !navigationStart || loadEventEnd === 0 || navigationStart === 0) {
+      return null;
+    }
+    
+    const loadTime = loadEventEnd - navigationStart;
+    
+    // Validate: must be positive and within PostgreSQL INTEGER range (-2147483648 to 2147483647)
+    if (loadTime < 0 || loadTime > 2147483647) {
+      return null;
+    }
+    
+    return Math.round(loadTime);
+  }
+
   function trackPageView() {
     const pageViewData = {
       page_url: window.location.href,
       page_title: document.title,
       referrer: document.referrer || null,
-      load_time: performance.timing ? 
-        performance.timing.loadEventEnd - performance.timing.navigationStart : null,
+      load_time: getLoadTime(),
     };
 
     // If session not ready, queue the pageview
@@ -462,6 +487,22 @@
     }
   }
 
+  // Helper function to safely calculate time on page
+  function getTimeOnPage() {
+    if (!performance.timing || !performance.timing.navigationStart) {
+      return null;
+    }
+    
+    const timeOnPage = Math.round((Date.now() - performance.timing.navigationStart) / 1000);
+    
+    // Validate: must be positive and within PostgreSQL INTEGER range
+    if (timeOnPage < 0 || timeOnPage > 2147483647) {
+      return null;
+    }
+    
+    return timeOnPage;
+  }
+
   // Update page view on exit
   window.addEventListener('beforeunload', () => {
     if (config.trackingSessionId && maxScrollDepth > 0) {
@@ -469,8 +510,7 @@
         tracking_session_id: config.trackingSessionId,
         page_url: window.location.href,
         scroll_depth: maxScrollDepth,
-        time_on_page: performance.timing ? 
-          Math.round((Date.now() - performance.timing.navigationStart) / 1000) : null,
+        time_on_page: getTimeOnPage(),
       };
       
       // Use sendBeacon for reliability
