@@ -26,21 +26,37 @@
   if (scriptTag) {
     config.websiteId = scriptTag.getAttribute('data-website-id');
     
-    // Get API URL from script tag src
-    const scriptSrc = scriptTag.getAttribute('src') || scriptTag.src;
-    if (scriptSrc) {
-      try {
-        const scriptUrl = new URL(scriptSrc, window.location.href);
-        config.apiUrl = scriptUrl.origin + '/api/tracking';
-      } catch (e) {
-        console.error('Tracking: Failed to parse script URL', e);
-        // Fallback: try to get from data attribute
-        const apiUrlAttr = scriptTag.getAttribute('data-api-url');
-        if (apiUrlAttr) {
-          config.apiUrl = apiUrlAttr;
-        } else {
-          console.error('Tracking: API URL not found. Please add data-api-url attribute to script tag.');
+    // First, try to get API URL from data-api-url attribute (most reliable)
+    const apiUrlAttr = scriptTag.getAttribute('data-api-url');
+    if (apiUrlAttr) {
+      config.apiUrl = apiUrlAttr;
+    } else {
+      // Fallback: Get API URL from script tag src
+      const scriptSrc = scriptTag.getAttribute('src') || scriptTag.src;
+      if (scriptSrc) {
+        try {
+          // Parse scriptSrc as absolute URL (don't use window.location as base)
+          let scriptUrl;
+          if (scriptSrc.startsWith('http://') || scriptSrc.startsWith('https://')) {
+            // Absolute URL
+            scriptUrl = new URL(scriptSrc);
+          } else if (scriptSrc.startsWith('//')) {
+            // Protocol-relative URL
+            scriptUrl = new URL(window.location.protocol + scriptSrc);
+          } else {
+            // Relative URL - this shouldn't happen, but if it does, we can't determine origin
+            console.error('Tracking: Script src is relative. Please use absolute URL or data-api-url attribute.');
+            return;
+          }
+          config.apiUrl = scriptUrl.origin + '/api/tracking';
+        } catch (e) {
+          console.error('Tracking: Failed to parse script URL', e);
+          console.error('Tracking: Please add data-api-url attribute to script tag.');
+          return;
         }
+      } else {
+        console.error('Tracking: Script src not found. Please add src attribute or data-api-url attribute.');
+        return;
       }
     }
   }
