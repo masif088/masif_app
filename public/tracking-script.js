@@ -210,6 +210,10 @@
         const data = await response.json();
         if (data && data.id) {
           config.trackingSessionId = data.id;
+          // If there's a queued pageview, send it now
+          if (pageViewQueue) {
+            setTimeout(() => trackPageView(), 100);
+          }
         }
       }
     } catch (error) {
@@ -368,29 +372,12 @@
 
   // Track page view
   let pageViewRetryCount = 0;
-  const MAX_PAGEVIEW_RETRIES = 10;
+  const MAX_PAGEVIEW_RETRIES = 15;
   let pageViewTracked = false;
+  let pageViewQueue = null; // Queue pageview data if session not ready
   
   function trackPageView() {
-    if (!config.trackingSessionId) {
-      if (pageViewRetryCount < MAX_PAGEVIEW_RETRIES) {
-        pageViewRetryCount++;
-        setTimeout(() => trackPageView(), 200);
-        return;
-      } else {
-        console.warn('Tracking: Failed to track page view - session not initialized');
-        return;
-      }
-    }
-
-    // Prevent duplicate pageview tracking
-    if (pageViewTracked) {
-      return;
-    }
-    pageViewTracked = true;
-
     const pageViewData = {
-      tracking_session_id: config.trackingSessionId,
       page_url: window.location.href,
       page_title: document.title,
       referrer: document.referrer || null,
@@ -398,10 +385,53 @@
         performance.timing.loadEventEnd - performance.timing.navigationStart : null,
     };
 
-    sendToAPI('pageview', pageViewData).catch(error => {
-      console.error('Tracking: Failed to send page view:', error);
-      pageViewTracked = false; // Allow retry on error
-    });
+    // If session not ready, queue the pageview
+    if (!config.trackingSessionId) {
+      pageViewQueue = pageViewData;
+      if (pageViewRetryCount < MAX_PAGEVIEW_RETRIES) {
+        pageViewRetryCount++;
+        setTimeout(() => trackPageView(), 300);
+        return;
+      } else {
+        console.warn('Tracking: Failed to track page view - session not initialized after retries');
+        // Keep queue for later when session is ready
+        return;
+      }
+    }
+
+    // Use queued data if available, otherwise use current
+    const dataToSend = pageViewQueue || pageViewData;
+    dataToSend.tracking_session_id = config.trackingSessionId;
+    pageViewQueue = null; // Clear queue
+
+    // Prevent duplicate pageview tracking
+    if (pageViewTracked && !pageViewQueue) {
+      return;
+    }
+    pageViewTracked = true;
+
+    // Send with retry logic
+    let sendRetryCount = 0;
+    const MAX_SEND_RETRIES = 3;
+    
+    function sendPageView() {
+      sendToAPI('pageview', dataToSend, 3000) // 3 second timeout
+        .then(() => {
+          pageViewRetryCount = 0; // Reset retry count on success
+        })
+        .catch(error => {
+          console.error('Tracking: Failed to send page view:', error);
+          if (sendRetryCount < MAX_SEND_RETRIES) {
+            sendRetryCount++;
+            setTimeout(() => sendPageView(), 1000 * sendRetryCount); // Exponential backoff
+          } else {
+            pageViewTracked = false; // Allow retry on error
+            console.warn('Tracking: Max retries reached for pageview');
+          }
+        });
+    }
+    
+    sendPageView();
   }
 
   // Track scroll depth

@@ -29,22 +29,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'tracking_session_id and page_url are required' });
     }
 
-    // First, verify that the session exists
-    const session = await TrackingService.getTrackingSessionById(pageViewData.tracking_session_id);
-    if (!session) {
-      console.error('Session not found:', pageViewData.tracking_session_id);
-      return res.status(404).json({ message: 'Tracking session not found' });
-    }
-
-    // Create page view
-    const pageView = await TrackingService.createPageView(pageViewData);
-    
-    // Update session page_views count
-    await TrackingService.updateTrackingSession(session.id, {
-      page_views: (session.page_views || 0) + 1,
+    // Set timeout for the entire operation (10 seconds)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 10000);
     });
 
-    res.status(200).json(pageView);
+    const operationPromise = (async () => {
+      // First, verify that the session exists
+      const session = await TrackingService.getTrackingSessionById(pageViewData.tracking_session_id);
+      if (!session) {
+        console.error('Session not found:', pageViewData.tracking_session_id);
+        return res.status(404).json({ message: 'Tracking session not found' });
+      }
+
+      // Create page view
+      const pageView = await TrackingService.createPageView(pageViewData);
+      
+      // Update session page_views count (don't wait for this to complete)
+      TrackingService.updateTrackingSession(session.id, {
+        page_views: (session.page_views || 0) + 1,
+      }).catch(err => {
+        console.error('Error updating session page_views:', err);
+        // Don't fail the request if update fails
+      });
+
+      return res.status(200).json(pageView);
+    })();
+
+    await Promise.race([operationPromise, timeoutPromise]);
   } catch (error: any) {
     console.error('Error recording page view:', error);
     console.error('Error details:', {
