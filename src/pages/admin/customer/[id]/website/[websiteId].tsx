@@ -937,7 +937,7 @@ const WebsiteDetailPage = () => {
                         </p>
                         <div className="bg-light p-3 rounded">
                           <code style={{ fontSize: "0.875rem" }}>
-                            {`<script src="${typeof window !== 'undefined' ? window.location.origin : 'https://masif-app.vercel.app'}/api/tracking-script" data-website-id="${websiteId}"></script>`}
+                            {`<script src="${typeof window !== 'undefined' ? window.location.origin : 'https://masif-app.vercel.app'}/api/tracking-script" data-website-id="${websiteId}" data-api-url="${typeof window !== 'undefined' ? window.location.origin : 'https://masif-app.vercel.app'}/api/tracking"></script>`}
                           </code>
                         </div>
                         <Button
@@ -946,7 +946,7 @@ const WebsiteDetailPage = () => {
                           className="mt-2"
                           onClick={() => {
                             const origin = typeof window !== 'undefined' ? window.location.origin : 'https://masif-app.vercel.app';
-                            const script = `<script src="${origin}/api/tracking-script" data-website-id="${websiteId}"></script>`;
+                            const script = `<script src="${origin}/api/tracking-script" data-website-id="${websiteId}" data-api-url="${origin}/api/tracking"></script>`;
                             navigator.clipboard.writeText(script);
                             toast.success("Script copied to clipboard!");
                           }}

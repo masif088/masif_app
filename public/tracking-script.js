@@ -11,7 +11,7 @@
 
   // Configuration
   const config = {
-    apiUrl: window.location.origin + '/api/tracking',
+    apiUrl: null, // Will be set from script tag
     websiteId: null,
     sessionId: null,
     visitorId: null,
@@ -21,14 +21,37 @@
     debounceDelay: 300,
   };
 
-  // Get website ID from script tag
-  const scriptTag = document.querySelector('script[data-website-id]');
+  // Get website ID and API URL from script tag
+  const scriptTag = document.querySelector('script[data-website-id]') || document.currentScript;
   if (scriptTag) {
     config.websiteId = scriptTag.getAttribute('data-website-id');
+    
+    // Get API URL from script tag src
+    const scriptSrc = scriptTag.getAttribute('src') || scriptTag.src;
+    if (scriptSrc) {
+      try {
+        const scriptUrl = new URL(scriptSrc, window.location.href);
+        config.apiUrl = scriptUrl.origin + '/api/tracking';
+      } catch (e) {
+        console.error('Tracking: Failed to parse script URL', e);
+        // Fallback: try to get from data attribute
+        const apiUrlAttr = scriptTag.getAttribute('data-api-url');
+        if (apiUrlAttr) {
+          config.apiUrl = apiUrlAttr;
+        } else {
+          console.error('Tracking: API URL not found. Please add data-api-url attribute to script tag.');
+        }
+      }
+    }
   }
 
   if (!config.websiteId) {
     console.warn('Tracking: website-id not found');
+    return;
+  }
+
+  if (!config.apiUrl) {
+    console.error('Tracking: API URL not found. Please ensure the script tag has a valid src attribute or data-api-url attribute.');
     return;
   }
 
