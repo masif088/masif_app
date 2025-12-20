@@ -19,6 +19,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/Data/*": ["./Data/*"],
+      "Types/*": ["./Types/*"],
+      "utils/*": ["./utils/*"]
     }
   },
   "include": [

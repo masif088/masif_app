@@ -36,8 +36,9 @@ import {
   CustomerDataTemplate,
   CustomerDetail,
   CustomerContentTemplate,
-} from "../../../../Types/CustomerType";
-import { CustomerService } from "../../../../utils/supabase/customerService";
+  CustomerWebsite,
+} from "Types/CustomerType";
+import { CustomerService } from "utils/supabase/customerService";
 
 const CustomerDetailPage = () => {
   const router = useRouter();
@@ -53,6 +54,8 @@ const CustomerDetailPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showContentPreviewModal, setShowContentPreviewModal] = useState(false);
+  const [showWebsiteModal, setShowWebsiteModal] = useState(false);
+  const [showDeleteWebsiteModal, setShowDeleteWebsiteModal] = useState(false);
 
   // Content template states
   const [selectedContentTemplateId, setSelectedContentTemplateId] = useState<string>("");
@@ -68,11 +71,23 @@ const CustomerDetailPage = () => {
   // Store all detail values by template_id
   const [detailValues, setDetailValues] = useState<Map<string, string>>(new Map());
 
+  // Website states
+  const [websites, setWebsites] = useState<CustomerWebsite[]>([]);
+  const [selectedWebsite, setSelectedWebsite] = useState<CustomerWebsite | null>(null);
+  const [isEditingWebsite, setIsEditingWebsite] = useState(false);
+  const [websiteForm, setWebsiteForm] = useState({
+    url: "",
+    name: "",
+    description: "",
+    is_primary: false,
+  });
+
   useEffect(() => {
     if (id) {
       loadCustomer();
       loadTemplates();
       loadContentTemplates();
+      loadWebsites();
     }
   }, [id]);
 
@@ -155,6 +170,16 @@ const CustomerDetailPage = () => {
       setContentTemplates(contentTemplatesData);
     } catch (error) {
       console.error("Error loading content templates:", error);
+    }
+  };
+
+  const loadWebsites = async () => {
+    if (!id || typeof id !== "string") return;
+    try {
+      const websitesData = await CustomerService.getCustomerWebsites(id);
+      setWebsites(websitesData);
+    } catch (error) {
+      console.error("Error loading websites:", error);
     }
   };
 
@@ -279,6 +304,77 @@ const CustomerDetailPage = () => {
     setShowContentPreviewModal(true);
   };
 
+  // Website handlers
+  const handleAddWebsite = () => {
+    setIsEditingWebsite(false);
+    setSelectedWebsite(null);
+    setWebsiteForm({
+      url: "",
+      name: "",
+      description: "",
+      is_primary: false,
+    });
+    setShowWebsiteModal(true);
+  };
+
+  const handleEditWebsite = (website: CustomerWebsite) => {
+    setIsEditingWebsite(true);
+    setSelectedWebsite(website);
+    setWebsiteForm({
+      url: website.url,
+      name: website.name || "",
+      description: website.description || "",
+      is_primary: website.is_primary,
+    });
+    setShowWebsiteModal(true);
+  };
+
+  const handleDeleteWebsite = (website: CustomerWebsite) => {
+    setSelectedWebsite(website);
+    setShowDeleteWebsiteModal(true);
+  };
+
+  const handleSubmitWebsite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customer) return;
+
+    setModalLoading(true);
+    try {
+      if (isEditingWebsite && selectedWebsite) {
+        await CustomerService.updateWebsite(selectedWebsite.id, websiteForm);
+        toast.success("Website updated successfully");
+      } else {
+        await CustomerService.createWebsite({
+          customer_id: customer.id,
+          ...websiteForm,
+        });
+        toast.success("Website added successfully");
+      }
+      setShowWebsiteModal(false);
+      loadWebsites();
+    } catch (error) {
+      console.error("Error saving website:", error);
+      toast.error("Failed to save website");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleConfirmDeleteWebsite = async () => {
+    if (!selectedWebsite) return;
+
+    try {
+      await CustomerService.deleteWebsite(selectedWebsite.id);
+      toast.success("Website deleted successfully");
+      setShowDeleteWebsiteModal(false);
+      setSelectedWebsite(null);
+      loadWebsites();
+    } catch (error) {
+      console.error("Error deleting website:", error);
+      toast.error("Failed to delete website");
+    }
+  };
+
   if (loading) {
     return (
       <div className="page-body">
@@ -311,7 +407,7 @@ const CustomerDetailPage = () => {
           <div className="text-center py-5">
             <h3>Customer not found</h3>
             <Button color="primary" onClick={handleBack} className="mt-3">
-              <ArrowLeft size={16} className="me-1" />
+              <i className="icon-arrow-left"></i>
               Back to Customers
             </Button>
           </div>
@@ -331,21 +427,20 @@ const CustomerDetailPage = () => {
         <Row className="mb-3">
           <Col>
             <div className="d-flex justify-content-between align-items-center">
-              <h4>{customer.name}</h4>
-              <div className="d-flex gap-2">
-                <Button color="secondary" onClick={handleBack}>
-                  <ArrowLeft size={16} className="me-1" />
-                  Back
-                </Button>
-                <Button color="warning" onClick={handleEdit}>
-                  <Edit size={16} className="me-1" />
-                  Edit
-                </Button>
-                <Button color="danger" onClick={handleDelete}>
-                  <Trash2 size={16} className="me-1" />
-                  Delete
-                </Button>
-              </div>
+              <h5>{customer.name}</h5>
+            </div>
+          </Col>
+          <Col className="d-flex align-items-center justify-content-end">
+            <div className="d-flex gap-2">
+              <Button color="secondary" onClick={handleBack}>
+                <i className="icon-arrow-left"></i> Back
+              </Button>
+              <Button color="warning" onClick={handleEdit}>
+                <i className="icon-pencil"></i> Edit
+              </Button>
+              <Button color="danger" onClick={handleDelete}>
+                <i className="icon-trash"></i> Delete
+              </Button>
             </div>
           </Col>
         </Row>
@@ -424,8 +519,7 @@ const CustomerDetailPage = () => {
                   <h5 className="mb-0">Generate Content</h5>
                 </CardHeader>
                 <CardBody>
-                  <Row>
-                    <Col md={8}>
+                  
                       <FormGroup>
                         <Label for="content-template-select">Select Content Template</Label>
                         <Input
@@ -443,22 +537,104 @@ const CustomerDetailPage = () => {
                           ))}
                         </Input>
                       </FormGroup>
-                    </Col>
-                    <Col md={4} className="d-flex align-items-end">
+                  
                       <Button
                         color="success"
-                        block
+                        size="sm"
                         onClick={handleGenerateContent}
                         disabled={!selectedContentTemplateId}
                       >
-                        <FileText size={16} className="me-1" />
-                        Generate
+                    <i className="icon-file"></i> Generate
                       </Button>
-                    </Col>
-                  </Row>
+                  
                 </CardBody>
               </Card>
             )}
+
+            {/* Customer Websites */}
+            <Card className="mt-3">
+              <CardHeader className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">Websites</h5>
+                <Button color="primary" size="sm" onClick={handleAddWebsite}>
+                  <Plus size={16} className="me-1" />
+                  Add Website
+                </Button>
+              </CardHeader>
+              <CardBody>
+                {websites.length > 0 ? (
+                  <Table responsive hover>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>URL</th>
+                        <th>Primary</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {websites.map((website) => (
+                        <tr key={website.id}>
+                          <td>
+                            {website.name || (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
+                          <td>
+                            <a
+                              href={website.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary"
+                            >
+                              {website.url}
+                            </a>
+                          </td>
+                          <td>
+                            {website.is_primary ? (
+                              <Badge color="success">Primary</Badge>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="d-flex gap-1">
+                              <Button
+                                color="outline-info"
+                                size="sm"
+                                onClick={() => router.push(`/admin/customer/${customer.id}/website/${website.id}`)}
+                                title="View Details"
+                              >
+                                <i className="icon-eye"></i>
+                              </Button>
+                              <Button
+                                color="outline-primary"
+                                size="sm"
+                                onClick={() => handleEditWebsite(website)}
+                                title="Edit"
+                              >
+                                <i className="icon-pencil"></i>
+                              </Button>
+                              <Button
+                                color="outline-danger"
+                                size="sm"
+                                onClick={() => handleDeleteWebsite(website)}
+                                title="Delete"
+                              >
+                                <i className="icon-trash"></i>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                ) : (
+                  <Alert color="info" className="text-center mb-0">
+                    No websites added yet. Click &quot;Add Website&quot; to add one.
+                  </Alert>
+                )}
+              </CardBody>
+            </Card>
           </Col>
 
           {/* Customer Details */}
@@ -479,8 +655,7 @@ const CustomerDetailPage = () => {
                     </>
                   ) : (
                     <>
-                      <Plus size={14} className="me-1" />
-                      Save All
+                      <i className="icon-save"></i> Save All
                     </>
                   )}
                 </Button>
@@ -668,6 +843,122 @@ const CustomerDetailPage = () => {
               }}
             >
               Copy Content
+            </Button>
+          </ModalFooter>
+        </Modal>
+
+        {/* Website Form Modal */}
+        <Modal
+          isOpen={showWebsiteModal}
+          toggle={() => setShowWebsiteModal(false)}
+        >
+          <ModalHeader toggle={() => setShowWebsiteModal(false)}>
+            {isEditingWebsite ? "Edit Website" : "Add Website"}
+          </ModalHeader>
+          <Form onSubmit={handleSubmitWebsite}>
+            <ModalBody>
+              <FormGroup>
+                <Label for="website-url">URL *</Label>
+                <Input
+                  type="url"
+                  id="website-url"
+                  value={websiteForm.url}
+                  onChange={(e) =>
+                    setWebsiteForm({ ...websiteForm, url: e.target.value })
+                  }
+                  placeholder="https://example.com"
+                  required
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label for="website-name">Name</Label>
+                <Input
+                  type="text"
+                  id="website-name"
+                  value={websiteForm.name}
+                  onChange={(e) =>
+                    setWebsiteForm({ ...websiteForm, name: e.target.value })
+                  }
+                  placeholder="e.g., Main Website, Blog, E-commerce"
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label for="website-description">Description</Label>
+                <Input
+                  type="textarea"
+                  id="website-description"
+                  rows={3}
+                  value={websiteForm.description}
+                  onChange={(e) =>
+                    setWebsiteForm({ ...websiteForm, description: e.target.value })
+                  }
+                  placeholder="Optional description for this website"
+                />
+              </FormGroup>
+              <FormGroup check>
+                <Input
+                  type="checkbox"
+                  id="website-primary"
+                  checked={websiteForm.is_primary}
+                  onChange={(e) =>
+                    setWebsiteForm({ ...websiteForm, is_primary: e.target.checked })
+                  }
+                />
+                <Label for="website-primary" check>
+                  Set as primary website
+                </Label>
+              </FormGroup>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="secondary"
+                onClick={() => setShowWebsiteModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button color="primary" type="submit" disabled={modalLoading}>
+                {modalLoading ? (
+                  <Spinner size="sm" />
+                ) : isEditingWebsite ? (
+                  "Update"
+                ) : (
+                  "Add"
+                )}
+              </Button>
+            </ModalFooter>
+          </Form>
+        </Modal>
+
+        {/* Delete Website Confirmation Modal */}
+        <Modal
+          isOpen={showDeleteWebsiteModal}
+          toggle={() => setShowDeleteWebsiteModal(false)}
+        >
+          <ModalHeader toggle={() => setShowDeleteWebsiteModal(false)}>
+            Confirm Delete
+          </ModalHeader>
+          <ModalBody>
+            <p>
+              Are you sure you want to delete this website?
+              {selectedWebsite && (
+                <>
+                  <br />
+                  <strong>{selectedWebsite.name || selectedWebsite.url}</strong>
+                </>
+              )}
+              <br />
+              This action cannot be undone.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              color="secondary"
+              onClick={() => setShowDeleteWebsiteModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button color="danger" onClick={handleConfirmDeleteWebsite}>
+              Delete
             </Button>
           </ModalFooter>
         </Modal>

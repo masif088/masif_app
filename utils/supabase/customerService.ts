@@ -11,7 +11,10 @@ import {
   CustomerContentTemplate,
   CreateContentTemplateData,
   UpdateContentTemplateData,
-} from '../../Types/CustomerType';
+  CustomerWebsite,
+  CreateCustomerWebsiteData,
+  UpdateCustomerWebsiteData,
+} from 'Types/CustomerType';
 
 export class CustomerService {
   private static supabase = createClient();
@@ -54,6 +57,16 @@ export class CustomerService {
               title,
               key
             )
+          ),
+          websites:customer_websites(
+            id,
+            customer_id,
+            url,
+            name,
+            description,
+            is_primary,
+            created_at,
+            updated_at
           )
         `)
         .order('created_at', { ascending: false });
@@ -90,6 +103,16 @@ export class CustomerService {
               title,
               key
             )
+          ),
+          websites:customer_websites(
+            id,
+            customer_id,
+            url,
+            name,
+            description,
+            is_primary,
+            created_at,
+            updated_at
           )
         `)
         .eq('id', id)
@@ -665,6 +688,115 @@ export class CustomerService {
     }
 
     return content;
+  }
+
+  // ========== Customer Website Methods ==========
+
+  // Get all websites for a customer
+  static async getCustomerWebsites(customerId: string): Promise<CustomerWebsite[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('customer_websites')
+        .select('*')
+        .eq('customer_id', customerId)
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching customer websites:', error);
+      throw error;
+    }
+  }
+
+  // Get website by ID
+  static async getWebsiteById(id: string): Promise<CustomerWebsite | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from('customer_websites')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching website:', error);
+      throw error;
+    }
+  }
+
+  // Create a new website
+  static async createWebsite(websiteData: CreateCustomerWebsiteData): Promise<CustomerWebsite | null> {
+    try {
+      // If this is set as primary, unset other primary websites for this customer
+      if (websiteData.is_primary) {
+        await this.supabase
+          .from('customer_websites')
+          .update({ is_primary: false })
+          .eq('customer_id', websiteData.customer_id)
+          .eq('is_primary', true);
+      }
+
+      const { data, error } = await this.supabase
+        .from('customer_websites')
+        .insert([websiteData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating website:', error);
+      throw error;
+    }
+  }
+
+  // Update a website
+  static async updateWebsite(id: string, updates: UpdateCustomerWebsiteData): Promise<CustomerWebsite | null> {
+    try {
+      // If setting this as primary, unset other primary websites
+      if (updates.is_primary) {
+        const website = await this.getWebsiteById(id);
+        if (website) {
+          await this.supabase
+            .from('customer_websites')
+            .update({ is_primary: false })
+            .eq('customer_id', website.customer_id)
+            .eq('is_primary', true)
+            .neq('id', id);
+        }
+      }
+
+      const { data, error } = await this.supabase
+        .from('customer_websites')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating website:', error);
+      throw error;
+    }
+  }
+
+  // Delete a website
+  static async deleteWebsite(id: string): Promise<void> {
+    try {
+      const { error } = await this.supabase
+        .from('customer_websites')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting website:', error);
+      throw error;
+    }
   }
 }
 

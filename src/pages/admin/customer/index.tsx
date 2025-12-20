@@ -45,8 +45,8 @@ import {
   CustomerStats,
   CustomerFormData,
   CustomerContentTemplate,
-} from "../../../../Types/CustomerType";
-import { CustomerService } from "../../../../utils/supabase/customerService";
+} from "Types/CustomerType";
+import { CustomerService } from "utils/supabase/customerService";
 
 const CustomerManagement = () => {
   const router = useRouter();
@@ -467,7 +467,7 @@ const CustomerManagement = () => {
                               onClick={() => handleViewCustomer(customer)}
                               title="View"
                             >
-                              <Eye size={14} />
+                            <i className="icon-eye"></i>
                             </Button>
                             {contentTemplates.length > 0 && (
                               <Button
@@ -485,7 +485,7 @@ const CustomerManagement = () => {
                                 }}
                                 title="Generate Content"
                               >
-                                <FileText size={14} />
+                            <i className="icon-file"></i>
                               </Button>
                             )}
                             <Button
@@ -494,7 +494,7 @@ const CustomerManagement = () => {
                               onClick={() => handleDeleteCustomer(customer)}
                               title="Delete"
                             >
-                              <Trash2 size={14} />
+                            <i className="icon-trash"></i>
                             </Button>
                           </div>
                         </td>
@@ -528,8 +528,7 @@ const CustomerManagement = () => {
                   size="sm"
                   onClick={handleCreateContentTemplate}
                 >
-                  <Plus size={16} className="me-1" />
-                  Create Template
+                <i className="icon-plus"></i> Add Template
                 </Button>
               </CardHeader>
               <CardBody>
@@ -573,14 +572,14 @@ const CustomerManagement = () => {
                               size="sm"
                               onClick={() => handleEditContentTemplate(template)}
                             >
-                              <Edit size={14} />
+                            <i className="icon-pencil"></i>
                             </Button>
                             <Button
                               color="outline-danger"
                               size="sm"
                               onClick={() => handleDeleteContentTemplate(template.id)}
                             >
-                              <Trash2 size={14} />
+                            <i className="icon-trash"></i>
                             </Button>
                           </div>
                         </td>
