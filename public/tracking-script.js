@@ -334,10 +334,19 @@
   }
 
   // Track page view
+  let pageViewRetryCount = 0;
+  const MAX_PAGEVIEW_RETRIES = 10;
+  
   function trackPageView() {
     if (!config.trackingSessionId) {
-      setTimeout(() => trackPageView(), 100);
-      return;
+      if (pageViewRetryCount < MAX_PAGEVIEW_RETRIES) {
+        pageViewRetryCount++;
+        setTimeout(() => trackPageView(), 200);
+        return;
+      } else {
+        console.warn('Tracking: Failed to track page view - session not initialized');
+        return;
+      }
     }
 
     const pageViewData = {
@@ -349,7 +358,9 @@
         performance.timing.loadEventEnd - performance.timing.navigationStart : null,
     };
 
-    sendToAPI('pageview', pageViewData);
+    sendToAPI('pageview', pageViewData).catch(error => {
+      console.error('Tracking: Failed to send page view:', error);
+    });
   }
 
   // Track scroll depth

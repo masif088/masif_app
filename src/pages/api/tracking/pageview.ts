@@ -29,20 +29,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'tracking_session_id and page_url are required' });
     }
 
+    // First, verify that the session exists
+    const session = await TrackingService.getTrackingSessionById(pageViewData.tracking_session_id);
+    if (!session) {
+      console.error('Session not found:', pageViewData.tracking_session_id);
+      return res.status(404).json({ message: 'Tracking session not found' });
+    }
+
+    // Create page view
     const pageView = await TrackingService.createPageView(pageViewData);
     
     // Update session page_views count
-    const session = await TrackingService.getTrackingSessionById(pageViewData.tracking_session_id);
-    if (session) {
-      await TrackingService.updateTrackingSession(session.id, {
-        page_views: (session.page_views || 0) + 1,
-      });
-    }
+    await TrackingService.updateTrackingSession(session.id, {
+      page_views: (session.page_views || 0) + 1,
+    });
 
     res.status(200).json(pageView);
   } catch (error: any) {
     console.error('Error recording page view:', error);
-    res.status(500).json({ message: 'Failed to record page view', error: error.message });
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      details: error?.details,
+      hint: error?.hint,
+      body: req.body
+    });
+    res.status(500).json({ 
+      message: 'Failed to record page view', 
+      error: error?.message || 'Unknown error',
+      details: process.env.NODE_ENV === 'development' ? error?.details : undefined
+    });
   }
 }
 
