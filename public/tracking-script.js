@@ -293,6 +293,38 @@
     const elementInfo = getElementInfo(element);
     const position = getElementPosition(element);
 
+    // Check if clicked element is a link
+    const linkElement = element.closest('a');
+    if (linkElement && linkElement.href) {
+      const href = linkElement.href;
+      const currentOrigin = window.location.origin;
+      
+      // Check if it's a same-origin link (not external)
+      if (href.startsWith(currentOrigin) || href.startsWith('/') || href.startsWith('./') || href.startsWith('../')) {
+        // Track pageview before navigation for current page
+        if (config.trackingSessionId) {
+          const timeOnPage = Math.round((Date.now() - pageStartTime) / 1000);
+          const currentPageViewData = {
+            tracking_session_id: config.trackingSessionId,
+            page_url: window.location.href,
+            page_title: document.title,
+            referrer: document.referrer || null,
+            scroll_depth: maxScrollDepth,
+            time_on_page: timeOnPage > 0 ? timeOnPage : null,
+          };
+          
+          // Use sendBeacon for reliability during navigation
+          try {
+            const blob = new Blob([JSON.stringify(currentPageViewData)], { type: 'application/json' });
+            navigator.sendBeacon(config.apiUrl + '/pageview', blob);
+          } catch (err) {
+            // Fallback to fetch if sendBeacon fails
+            sendToAPI('pageview', currentPageViewData).catch(() => {});
+          }
+        }
+      }
+    }
+
     recordEvent('click', {
       x: position.x,
       y: position.y,
@@ -301,6 +333,7 @@
       element_class: elementInfo?.class,
       element_text: elementInfo?.text,
       element_selector: elementInfo?.selector,
+      link_url: linkElement?.href || null,
     });
   }
 
@@ -336,6 +369,7 @@
   // Track page view
   let pageViewRetryCount = 0;
   const MAX_PAGEVIEW_RETRIES = 10;
+  let pageViewTracked = false;
   
   function trackPageView() {
     if (!config.trackingSessionId) {
@@ -349,6 +383,12 @@
       }
     }
 
+    // Prevent duplicate pageview tracking
+    if (pageViewTracked) {
+      return;
+    }
+    pageViewTracked = true;
+
     const pageViewData = {
       tracking_session_id: config.trackingSessionId,
       page_url: window.location.href,
@@ -360,6 +400,7 @@
 
     sendToAPI('pageview', pageViewData).catch(error => {
       console.error('Tracking: Failed to send page view:', error);
+      pageViewTracked = false; // Allow retry on error
     });
   }
 
