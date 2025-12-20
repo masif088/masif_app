@@ -61,6 +61,16 @@
     }
   }
 
+  // Log for debugging
+  if (config.apiUrl) {
+    console.log('Tracking initialized:', {
+      websiteId: config.websiteId,
+      apiUrl: config.apiUrl,
+      currentOrigin: window.location.origin,
+      scriptTagSrc: scriptTag ? (scriptTag.getAttribute('src') || scriptTag.src) : 'not found'
+    });
+  }
+
   if (!config.websiteId) {
     console.warn('Tracking: website-id not found');
     return;
