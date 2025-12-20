@@ -158,22 +158,37 @@
     };
   }
 
-  // Send data to API
-  async function sendToAPI(endpoint, data) {
+  // Send data to API with timeout
+  async function sendToAPI(endpoint, data, timeout = 5000) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
       const response = await fetch(config.apiUrl + '/' + endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        console.error('Tracking API error:', response.statusText);
+        const errorText = await response.text().catch(() => '');
+        console.error('Tracking API error:', response.status, response.statusText, errorText);
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
+      
+      return await response.json().catch(() => null);
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.error('Tracking: Request timeout');
+        throw new Error('Request timeout');
+      }
       console.error('Tracking error:', error);
+      throw error;
     }
   }
 

@@ -58,6 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await Promise.race([operationPromise, timeoutPromise]);
   } catch (error: any) {
+    // Don't send response if already sent
+    if (res.headersSent) {
+      return;
+    }
+
     console.error('Error recording page view:', error);
     console.error('Error details:', {
       message: error?.message,
@@ -66,6 +71,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       hint: error?.hint,
       body: req.body
     });
+
+    // If timeout, return 504 Gateway Timeout
+    if (error?.message === 'Request timeout') {
+      return res.status(504).json({ 
+        message: 'Request timeout', 
+        error: 'The request took too long to process'
+      });
+    }
+
     res.status(500).json({ 
       message: 'Failed to record page view', 
       error: error?.message || 'Unknown error',
